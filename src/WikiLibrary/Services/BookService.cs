@@ -110,7 +110,12 @@ public class BookService
     {
         var validBooks = books.Where(b => b.Id > 0 && !string.IsNullOrWhiteSpace(b.Title)).ToList();
 
-        _byId = validBooks.ToDictionary(b => b.Id);
+        var byId = new Dictionary<int, Book>();
+        foreach (var b in validBooks)
+        {
+            byId[b.Id] = b;
+        }
+        _byId = byId;
         _sorted = validBooks.OrderBy(b => b.Title, StringComparer.OrdinalIgnoreCase).ToList();
 
         BuildLetterBuckets(_sorted);

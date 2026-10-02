@@ -2,11 +2,15 @@
 @inject BookService Books
 @inject NavigationManager Nav
 
-<p>Finding a random book...</p>
+<div class="initial-loader">
+    <div class="loader-spinner"></div>
+    <p>Finding a random book...</p>
+</div>
 
 @code {
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await Books.EnsureLoadedAsync();
         var b = Books.RandomBook();
         Nav.NavigateTo(b is null ? "/" : $"/book/{b.Id}", replace: true);
     }

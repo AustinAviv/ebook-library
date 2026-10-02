@@ -6,13 +6,24 @@ const redis = new Redis({
 });
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
+    res.statusCode = 405;
+    return res.end('Method Not Allowed');
+  }
+
   try {
     const raw = (await redis.hgetall('downloads')) ?? {};
     const counts = {};
-    for (const [id, value] of Object.entries(raw)) counts[id] = Number(value) || 0;
+    for (const [id, value] of Object.entries(raw)) {
+      if (/^\d{1,9}$/.test(id)) {
+        counts[id] = Number(value) || 0;
+      }
+    }
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.statusCode = 200;
     res.end(JSON.stringify(counts));
   } catch (err) {
