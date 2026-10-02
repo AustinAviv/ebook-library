@@ -220,8 +220,8 @@ static async Task AddBooksAsync(string[] args)
         JsonSerializer.Serialize(catalog, writeOptions));
 
     Console.WriteLine();
-    Console.WriteLine($"✓ Wrote {sorted.Count} books to {BooksJson}");
-    Console.WriteLine($"✓ Wrote catalog to {CatalogJson}");
+    Console.WriteLine($"[OK] Wrote {sorted.Count} books to {BooksJson}");
+    Console.WriteLine($"[OK] Wrote catalog to {CatalogJson}");
     Console.WriteLine();
     Console.WriteLine("Next steps:");
     Console.WriteLine("  1. Edit author / category / description in books.json");
@@ -282,14 +282,14 @@ static void CopySite()
             "_framework/blazor.webassembly.js");
 
         File.WriteAllText(indexPath, html);
-        Console.WriteLine($"✓ Patched importmap (runtime={runtimeFile}, native={nativeFile})");
+        Console.WriteLine($"[OK] Patched importmap (runtime={runtimeFile}, native={nativeFile})");
     }
     else
     {
-        Console.Error.WriteLine("⚠  Could not find fingerprinted dotnet runtime/native JS files.");
+        Console.Error.WriteLine("[WARN] Could not find fingerprinted dotnet runtime/native JS files.");
     }
 
-    Console.WriteLine($"✓ public/ ready for deployment.");
+    Console.WriteLine("[OK] public/ ready for deployment.");
 }
 
 // =============================================================================
