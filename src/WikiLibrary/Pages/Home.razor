@@ -1,0 +1,31 @@
+@page "/"
+@inject BookService Books
+
+<PageTitle>Free Library — Main page</PageTitle>
+<h1 class="firstHeading">Welcome to Free Library</h1>
+
+@if (Books.LoadError is not null)
+{
+    <p>The library could not be loaded: @Books.LoadError</p>
+}
+else
+{
+    <p>
+        <b>Free Library</b> is a collection of <b>@Books.Count.ToString("N0")</b> PDF books that anyone can
+        browse, search and download for free — no account, no login. Use the search box above,
+        pick a category below, or look through the <a href="/a-z">alphabetical index</a>.
+    </p>
+
+    <h2>Featured categories</h2>
+    <ul class="columns">
+        @foreach (var c in Books.Categories.Take(9))
+        {
+            <li><a href="/category/@Uri.EscapeDataString(c.Name)">@c.Name</a> <span class="muted">(@c.Count)</span></li>
+        }
+    </ul>
+    <p><a href="/categories">All categories →</a></p>
+
+    <h2>Recently added books</h2>
+    <BookList Books="Books.Newest(20)" />
+    <p><a href="/a-z">Browse all books →</a></p>
+}

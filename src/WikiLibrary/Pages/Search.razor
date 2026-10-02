@@ -1,0 +1,32 @@
+@page "/search"
+@inject BookService Books
+
+<PageTitle>Search: @Query — Free Library</PageTitle>
+<h1 class="firstHeading">Search results</h1>
+
+@if (string.IsNullOrWhiteSpace(Query))
+{
+    <p>Type something in the search box above.</p>
+}
+else
+{
+    <p>@total.ToString("N0") result(s) for “<b>@Query</b>”.</p>
+    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+    <BookList Books="pageItems" />
+    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+}
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "q")] public string? Query { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "page")] public int? PageNo { get; set; }
+
+    private int total;
+    private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
+
+    protected override void OnParametersSet()
+    {
+        var results = Books.Search(Query ?? "");
+        total = results.Count;
+        pageItems = BookService.Page(results, PageNo ?? 1);
+    }
+}

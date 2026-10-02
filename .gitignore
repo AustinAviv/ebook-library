@@ -1,0 +1,9 @@
+node_modules
+.env*
+.vercel
+.publish
+bin
+obj
+pdfs/*.pdf
+public/*
+!public/.gitkeep

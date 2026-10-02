@@ -1,0 +1,34 @@
+@inject NavigationManager Nav
+@* "← Previous 1 2 [3] 4 Next →" - links keep the other query parameters (e.g. ?q= or ?letter=). *@
+@if (TotalPages > 1)
+{
+    <div class="pager">
+        @if (CurrentPage > 1) { <a href="@Link(CurrentPage - 1)">← Previous</a> }
+        @foreach (var p in Window())
+        {
+            @if (p == CurrentPage) { <strong>@p</strong> } else { <a href="@Link(p)">@p</a> }
+        }
+        @if (CurrentPage < TotalPages) { <a href="@Link(CurrentPage + 1)">Next →</a> }
+        <span class="muted">(@TotalItems.ToString("N0") items)</span>
+    </div>
+}
+
+@code {
+    [Parameter] public int TotalItems { get; set; }
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int PageSize { get; set; } = BookService.PageSize;
+
+    private int TotalPages => (int)Math.Ceiling(TotalItems / (double)PageSize);
+
+    private string Link(int page) =>
+        Nav.GetUriWithQueryParameter("page", page == 1 ? (int?)null : page);
+
+    // Show at most 9 page numbers around the current page.
+    private IEnumerable<int> Window()
+    {
+        int start = Math.Max(1, CurrentPage - 4);
+        int end = Math.Min(TotalPages, start + 8);
+        start = Math.Max(1, end - 8);
+        return Enumerable.Range(start, end - start + 1);
+    }
+}

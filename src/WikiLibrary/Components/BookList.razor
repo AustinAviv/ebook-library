@@ -1,0 +1,28 @@
+@* A plain table of books, reused by every list page. *@
+@if (Books.Count == 0)
+{
+    <p><em>No books found.</em></p>
+}
+else
+{
+    <table class="wikitable">
+        <thead>
+            <tr><th>Title</th><th>Author</th><th>Category</th><th>Year</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Books)
+            {
+                <tr>
+                    <td><a href="/book/@b.Id">@b.Title</a></td>
+                    <td>@b.Author</td>
+                    <td><a href="/category/@Uri.EscapeDataString(b.Category)">@b.Category</a></td>
+                    <td>@b.YearText</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<Book> Books { get; set; } = Array.Empty<Book>();
+}

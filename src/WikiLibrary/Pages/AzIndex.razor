@@ -1,0 +1,38 @@
+@page "/a-z"
+@inject BookService Books
+
+<PageTitle>All books (A–Z) — Free Library</PageTitle>
+<h1 class="firstHeading">All books (A–Z)</h1>
+
+<p class="letters">
+    <a href="/a-z">All</a>
+    @foreach (var l in Letters)
+    {
+        <span> · </span><a href="/a-z?letter=@Uri.EscapeDataString(l)">@l</a>
+    }
+</p>
+
+<p>Showing @total.ToString("N0") book(s)@(string.IsNullOrEmpty(Letter) ? "" : $" starting with “{Letter}”").</p>
+
+<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+<BookList Books="pageItems" />
+<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "letter")] public string? Letter { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "page")] public int? PageNo { get; set; }
+
+    private static readonly string[] Letters =
+        Enumerable.Range('A', 26).Select(c => ((char)c).ToString()).Append("#").ToArray();
+
+    private int total;
+    private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
+
+    // Runs whenever the URL (letter / page) changes.
+    protected override void OnParametersSet()
+    {
+        var list = Books.ByLetter(Letter?.ToUpperInvariant());
+        total = list.Count;
+        pageItems = BookService.Page(list, PageNo ?? 1);
+    }
+}

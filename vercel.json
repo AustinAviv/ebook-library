@@ -1,0 +1,35 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": "npm install",
+  "outputDirectory": "public",
+  "functions": {
+    "api/download.js": { "includeFiles": "api/_catalog.json", "maxDuration": 10 },
+    "api/stats.js": { "maxDuration": 10 }
+  },
+  "rewrites": [
+    { "source": "/((?!api/|_framework/|data/|css/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/_framework/(.*)\\.wasm",
+      "headers": [
+        { "key": "Content-Type", "value": "application/wasm" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/_framework/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/data/books.json",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/((?!_framework|data|api|css).*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    }
+  ]
+}

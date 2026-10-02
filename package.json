@@ -1,0 +1,17 @@
+{
+  "name": "free-library",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wikipedia-style free PDF library: Blazor WASM frontend + Vercel Functions.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "prepare-library": "node --env-file=.env.local scripts/prepare-library.mjs ./pdfs",
+    "build:site": "dotnet publish src/WikiLibrary -c Release -o .publish && node scripts/copy-site.mjs",
+    "deploy": "npm run build:site && vercel deploy --prod"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.0",
+    "@vercel/blob": "^2.6.1"
+  }
+}

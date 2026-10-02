@@ -1,0 +1,65 @@
+/* Wikipedia-style look: white page, serif headings, sans-serif body. No frameworks. */
+:root { --link:#0645ad; --visited:#6b4ba1; --border:#a2a9b1; --text:#202122; --muted:#54595d; }
+* { box-sizing: border-box; }
+html, body { margin:0; background:#fff; color:var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size:15px; line-height:1.6; }
+
+a { color:var(--link); text-decoration:underline; }
+a:visited { color:var(--visited); }
+a:hover { text-decoration:underline; }
+
+h1, h2, h3 { font-family: "Linux Libertine", Georgia, Times, serif; font-weight:normal; }
+h1.firstHeading { font-size:1.8em; margin:0 0 .2em; padding-bottom:.1em; border-bottom:1px solid var(--border); }
+h2 { font-size:1.45em; margin:1em 0 .4em; padding-bottom:.1em; border-bottom:1px solid var(--border); }
+.tagline { color:var(--muted); font-size:.85em; margin-bottom:1em; }
+.muted { color:var(--muted); font-size:.9em; }
+
+/* header */
+.topbar { display:flex; align-items:center; gap:1em; padding:.5em 1em; border-bottom:1px solid var(--border); }
+.brand { display:flex; align-items:center; gap:.5em; text-decoration:none; color:var(--text);
+  font-family:"Linux Libertine", Georgia, serif; font-size:1.3em; min-width:11em; }
+.brand:visited { color:var(--text); }
+.searchbox { flex:1; display:flex; justify-content:center; gap:.3em; }
+.searchbox input { width:100%; max-width:34em; padding:.4em .6em; border:1px solid var(--border); border-radius:2px; font:inherit; }
+.searchbox button { padding:.4em .9em; border:1px solid var(--border); background:#f8f9fa; border-radius:2px; font:inherit; cursor:pointer; }
+
+/* layout */
+.page { display:flex; align-items:flex-start; }
+.sidebar { width:11em; flex:none; padding:1em .8em; font-size:.9em; }
+.sidebar h3 { font-size:.8em; color:var(--muted); text-transform:uppercase; margin:0 0 .5em; font-family:inherit; }
+.sidebar ul { list-style:none; margin:0; padding:0; }
+.sidebar li { margin:.35em 0; }
+.content { flex:1; min-width:0; max-width:62em; padding:1em 1.5em 2em; }
+
+/* tables */
+.wikitable { border-collapse:collapse; width:100%; margin:.5em 0 1em; font-size:.93em; }
+.wikitable th, .wikitable td { border:1px solid var(--border); padding:.3em .6em; text-align:left; }
+.wikitable th { background:#eaecf0; }
+
+/* infobox on the right of book pages */
+.infobox { float:right; clear:right; width:22em; margin:.3em 0 1em 1.5em; border:1px solid var(--border);
+  background:#f8f9fa; border-collapse:collapse; font-size:.88em; }
+.infobox caption { font-weight:bold; background:#cedff2; padding:.4em; font-family:"Linux Libertine", Georgia, serif; font-size:1.1em; }
+.infobox th, .infobox td { padding:.3em .5em; vertical-align:top; text-align:left; border-top:1px solid #eaecf0; }
+.infobox th { width:35%; }
+
+.download-box { margin:.5em 0 1em; font-size:1.15em; }
+.download-link { font-weight:bold; font-size:1.1em; }
+
+.columns { columns:3 12em; margin:.3em 0 1em; padding-left:1.2em; }
+.pager { margin:.6em 0; }
+.pager a, .pager strong { margin-right:.7em; }
+.letters { word-spacing:.1em; }
+
+.footer { border-top:1px solid var(--border); margin-top:2em; padding:1em; color:var(--muted); font-size:.78em; }
+.footer p { margin:.2em 0; }
+
+/* phones: stack the sidebar above the content, infobox full width */
+@media (max-width: 720px) {
+  .topbar { flex-wrap:wrap; }
+  .brand { min-width:0; }
+  .page { flex-direction:column; }
+  .sidebar { width:100%; padding:.5em 1em; }
+  .sidebar ul { display:flex; flex-wrap:wrap; gap:.3em 1em; }
+  .infobox { float:none; width:100%; margin:.5em 0 1em; }
+}

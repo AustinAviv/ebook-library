@@ -1,0 +1,8 @@
+# Only api/ and public/ (plus package.json, vercel.json) are deployed.
+src
+scripts
+pdfs
+.publish
+node_modules
+.env*
+README.md

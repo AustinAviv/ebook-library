@@ -1,0 +1,25 @@
+@page "/category/{Name}"
+@inject BookService Books
+
+<PageTitle>Category: @Name — Free Library</PageTitle>
+<h1 class="firstHeading">Category: @Name</h1>
+<p>@total.ToString("N0") book(s) in this category. <a href="/categories">← All categories</a></p>
+
+<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+<BookList Books="pageItems" />
+<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+
+@code {
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter, SupplyParameterFromQuery(Name = "page")] public int? PageNo { get; set; }
+
+    private int total;
+    private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
+
+    protected override void OnParametersSet()
+    {
+        var list = Books.InCategory(Name);
+        total = list.Count;
+        pageItems = BookService.Page(list, PageNo ?? 1);
+    }
+}

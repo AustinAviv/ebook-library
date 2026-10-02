@@ -1,0 +1,12 @@
+@page "/categories"
+@inject BookService Books
+
+<PageTitle>Categories — Free Library</PageTitle>
+<h1 class="firstHeading">Categories</h1>
+<p>@Books.Categories.Count categories:</p>
+<ul class="columns">
+    @foreach (var c in Books.Categories.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase))
+    {
+        <li><a href="/category/@Uri.EscapeDataString(c.Name)">@c.Name</a> <span class="muted">(@c.Count)</span></li>
+    }
+</ul>

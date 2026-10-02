@@ -1,0 +1,50 @@
+@page "/book/{Id:int}"
+@implements IDisposable
+@inject BookService Books
+
+@if (book is null)
+{
+    <PageTitle>Book not found — Free Library</PageTitle>
+    <h1 class="firstHeading">Book not found</h1>
+    <p>There is no book with id @Id. Try the <a href="/a-z">A–Z index</a>.</p>
+}
+else
+{
+    <PageTitle>@book.Title — Free Library</PageTitle>
+    <h1 class="firstHeading">@book.Title</h1>
+    <div class="tagline">From Free Library, the free PDF collection</div>
+
+    <table class="infobox">
+        <caption>@book.Title</caption>
+        <tr><th>Title</th><td>@book.Title</td></tr>
+        <tr><th>Author</th><td>@book.Author</td></tr>
+        <tr><th>Category</th><td><a href="/category/@Uri.EscapeDataString(book.Category)">@book.Category</a></td></tr>
+        <tr><th>Year</th><td>@book.YearText</td></tr>
+        <tr><th>Language</th><td>@book.Language</td></tr>
+        <tr><th>Pages</th><td>@book.PagesText</td></tr>
+        <tr><th>File size</th><td>@book.FileSizeText</td></tr>
+        <tr><th>Downloads</th><td>@(Books.GetDownloads(book.Id)?.ToString("N0") ?? "—")</td></tr>
+    </table>
+
+    <p><b>@book.Title</b> is a book by @book.Author in the category
+       <a href="/category/@Uri.EscapeDataString(book.Category)">@book.Category</a>.</p>
+    <p>@book.Description</p>
+
+    <h2>Download</h2>
+    @* The "download" attribute stops Blazor from treating this as an in-app route,
+       so the browser really requests /api/download (which redirects to the PDF). *@
+    <p class="download-box">
+        <a class="download-link" href="/api/download?id=@book.Id" download>Download PDF</a>
+        <span class="muted">(@book.FileSizeText, free, no login)</span>
+    </p>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Book? book;
+
+    protected override void OnInitialized() => Books.StatsChanged += OnStats;
+    protected override void OnParametersSet() => book = Books.GetById(Id);
+    private void OnStats() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Books.StatsChanged -= OnStats;
+}

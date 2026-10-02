@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "description": "Sample entry for “Pride and Prejudice”. Replace this with your own short description of the book.",
+    "category": "Fiction",
+    "year": 1813,
+    "language": "English",
+    "pages": 432,
+    "fileSize": 1750000,
+    "blobPathname": "books/pride-and-prejudice.pdf"
+  },
+  {
+    "id": 2,
+    "title": "Moby-Dick",
+    "author": "Herman Melville",
+    "description": "Sample entry for “Moby-Dick”. Replace this with your own short description of the book.",
+    "category": "Fiction",
+    "year": 1851,
+    "language": "English",
+    "pages": 635,
+    "fileSize": 2000000,
+    "blobPathname": "books/moby-dick.pdf"
+  },
+  {
+    "id": 3,
+    "title": "The Art of War",
+    "author": "Sun Tzu",
+    "description": "Sample entry for “The Art of War”. Replace this with your own short description of the book.",
+    "category": "Philosophy",
+    "year": 0,
+    "language": "English",
+    "pages": 96,
+    "fileSize": 2250000,
+    "blobPathname": "books/the-art-of-war.pdf"
+  },
+  {
+    "id": 4,
+    "title": "On the Origin of Species",
+    "author": "Charles Darwin",
+    "description": "Sample entry for “On the Origin of Species”. Replace this with your own short description of the book.",
+    "category": "Science",
+    "year": 1859,
+    "language": "English",
+    "pages": 502,
+    "fileSize": 2500000,
+    "blobPathname": "books/on-the-origin-of-species.pdf"
+  },
+  {
+    "id": 5,
+    "title": "Meditations",
+    "author": "Marcus Aurelius",
+    "description": "Sample entry for “Meditations”. Replace this with your own short description of the book.",
+    "category": "Philosophy",
+    "year": 180,
+    "language": "English",
+    "pages": 254,
+    "fileSize": 2750000,
+    "blobPathname": "books/meditations.pdf"
+  },
+  {
+    "id": 6,
+    "title": "Frankenstein",
+    "author": "Mary Shelley",
+    "description": "Sample entry for “Frankenstein”. Replace this with your own short description of the book.",
+    "category": "Fiction",
+    "year": 1818,
+    "language": "English",
+    "pages": 280,
+    "fileSize": 3000000,
+    "blobPathname": "books/frankenstein.pdf"
+  },
+  {
+    "id": 7,
+    "title": "The Wealth of Nations",
+    "author": "Adam Smith",
+    "description": "Sample entry for “The Wealth of Nations”. Replace this with your own short description of the book.",
+    "category": "Economics",
+    "year": 1776,
+    "language": "English",
+    "pages": 1264,
+    "fileSize": 3250000,
+    "blobPathname": "books/the-wealth-of-nations.pdf"
+  },
+  {
+    "id": 8,
+    "title": "A Brief History of Rome",
+    "author": "Sample Author",
+    "description": "Sample entry for “A Brief History of Rome”. Replace this with your own short description of the book.",
+    "category": "History",
+    "year": 2001,
+    "language": "English",
+    "pages": 310,
+    "fileSize": 3500000,
+    "blobPathname": "books/a-brief-history-of-rome.pdf"
+  }
+]
