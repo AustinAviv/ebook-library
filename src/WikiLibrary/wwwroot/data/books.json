@@ -78,5 +78,237 @@
     "blobPathname": "books/javascript-for-beginners.pdf",
     "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-for-beginners.pdf?download=1",
     "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-for-beginners.pdf"
+  },
+  {
+    "id": 19,
+    "title": "JavaScript For Impatient Programmers",
+    "fileSize": 1719494,
+    "blobPathname": "books/javascript-for-impatient-programmers.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-for-impatient-programmers.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-for-impatient-programmers.pdf"
+  },
+  {
+    "id": 20,
+    "title": "JavaScript Notes for Professionals",
+    "fileSize": 4235532,
+    "blobPathname": "books/javascript-notes-for-professionals.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-notes-for-professionals.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-notes-for-professionals.pdf"
+  },
+  {
+    "id": 21,
+    "title": "Learn Swift by examples",
+    "fileSize": 1310904,
+    "blobPathname": "books/learn-swift-by-examples.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/learn-swift-by-examples.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/learn-swift-by-examples.pdf"
+  },
+  {
+    "id": 22,
+    "title": "Learning Go",
+    "fileSize": 648859,
+    "blobPathname": "books/learning-go.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/learning-go.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/learning-go.pdf"
+  },
+  {
+    "id": 23,
+    "title": "MIPS Assembly Language Programming using QtSpim",
+    "fileSize": 1590695,
+    "blobPathname": "books/mips-assembly-language-programming-using-qtspim.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/mips-assembly-language-programming-using-qtspim.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/mips-assembly-language-programming-using-qtspim.pdf"
+  },
+  {
+    "id": 24,
+    "title": "Modern C",
+    "fileSize": 2993046,
+    "blobPathname": "books/modern-c.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/modern-c.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/modern-c.pdf"
+  },
+  {
+    "id": 25,
+    "title": "PHP Notes for Professionals",
+    "fileSize": 3500639,
+    "blobPathname": "books/php-notes-for-professionals.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/php-notes-for-professionals.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/php-notes-for-professionals.pdf"
+  },
+  {
+    "id": 26,
+    "title": "PHP Reference Beginner to Intermediate PHP5",
+    "fileSize": 861717,
+    "blobPathname": "books/php-reference-beginner-to-intermediate-php5.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/php-reference-beginner-to-intermediate-php5.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/php-reference-beginner-to-intermediate-php5.pdf"
+  },
+  {
+    "id": 27,
+    "title": "Principles of Programming Languages",
+    "fileSize": 858632,
+    "blobPathname": "books/principles-of-programming-languages.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/principles-of-programming-languages.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/principles-of-programming-languages.pdf"
+  },
+  {
+    "id": 28,
+    "title": "Programming Fundamentals A Modular Structured Approach using C\u002B\u002B",
+    "fileSize": 2095717,
+    "blobPathname": "books/programming-fundamentals-a-modular-structured-approach-using-c.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/programming-fundamentals-a-modular-structured-approach-using-c.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/programming-fundamentals-a-modular-structured-approach-using-c.pdf"
+  },
+  {
+    "id": 29,
+    "title": "Programming Languages Application and Interpretation",
+    "fileSize": 1289960,
+    "blobPathname": "books/programming-languages-application-and-interpretation.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/programming-languages-application-and-interpretation.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/programming-languages-application-and-interpretation.pdf"
+  },
+  {
+    "id": 30,
+    "title": "Programming Persistent Memory",
+    "fileSize": 5026687,
+    "blobPathname": "books/programming-persistent-memory.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/programming-persistent-memory.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/programming-persistent-memory.pdf"
+  },
+  {
+    "id": 31,
+    "title": "Python for Everybody",
+    "fileSize": 1881963,
+    "blobPathname": "books/python-for-everybody.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/python-for-everybody.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/python-for-everybody.pdf"
+  },
+  {
+    "id": 32,
+    "title": "R for Beginners",
+    "fileSize": 538293,
+    "blobPathname": "books/r-for-beginners.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/r-for-beginners.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/r-for-beginners.pdf"
+  },
+  {
+    "id": 33,
+    "title": "R Programming",
+    "fileSize": 513575,
+    "blobPathname": "books/r-programming.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/r-programming.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/r-programming.pdf"
+  },
+  {
+    "id": 34,
+    "title": "Structure and Interpretation of Computer Programs, JavaScript Edition",
+    "fileSize": 4541670,
+    "blobPathname": "books/structure-and-interpretation-of-computer-programs-javascript-edition.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/structure-and-interpretation-of-computer-programs-javascript-edition.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/structure-and-interpretation-of-computer-programs-javascript-edition.pdf"
+  },
+  {
+    "id": 35,
+    "title": "Swift Notes for Professionals",
+    "fileSize": 2763944,
+    "blobPathname": "books/swift-notes-for-professionals.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/swift-notes-for-professionals.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/swift-notes-for-professionals.pdf"
+  },
+  {
+    "id": 36,
+    "title": "The A Z of Programming Languages",
+    "fileSize": 631694,
+    "blobPathname": "books/the-a-z-of-programming-languages.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-a-z-of-programming-languages.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-a-z-of-programming-languages.pdf"
+  },
+  {
+    "id": 37,
+    "title": "The Little Go Book",
+    "fileSize": 279723,
+    "blobPathname": "books/the-little-go-book.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-little-go-book.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-little-go-book.pdf"
+  },
+  {
+    "id": 38,
+    "title": "The Missing Link An Introduction to Web Development and Programming",
+    "fileSize": 2490163,
+    "blobPathname": "books/the-missing-link-an-introduction-to-web-development-and-programming.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-missing-link-an-introduction-to-web-development-and-programming.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-missing-link-an-introduction-to-web-development-and-programming.pdf"
+  },
+  {
+    "id": 39,
+    "title": "The Rust Programming Language",
+    "fileSize": 4624557,
+    "blobPathname": "books/the-rust-programming-language.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-rust-programming-language.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-rust-programming-language.pdf"
+  },
+  {
+    "id": 40,
+    "title": "The Swift Programming Language (Swift 5 7)",
+    "fileSize": 7848507,
+    "blobPathname": "books/the-swift-programming-language-swift-5-7.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-swift-programming-language-swift-5-7.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-swift-programming-language-swift-5-7.pdf"
+  },
+  {
+    "id": 41,
+    "title": "The Undergraduate Guide to R",
+    "fileSize": 474177,
+    "blobPathname": "books/the-undergraduate-guide-to-r.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-undergraduate-guide-to-r.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-undergraduate-guide-to-r.pdf"
+  },
+  {
+    "id": 42,
+    "title": "The Way To Go",
+    "fileSize": 5088129,
+    "blobPathname": "books/the-way-to-go.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-way-to-go.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-way-to-go.pdf"
+  },
+  {
+    "id": 43,
+    "title": "Think Java How to Think Like a Computer Scientist",
+    "fileSize": 2855376,
+    "blobPathname": "books/think-java-how-to-think-like-a-computer-scientist.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/think-java-how-to-think-like-a-computer-scientist.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/think-java-how-to-think-like-a-computer-scientist.pdf"
+  },
+  {
+    "id": 44,
+    "title": "Think Python",
+    "fileSize": 834685,
+    "blobPathname": "books/think-python.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/think-python.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/think-python.pdf"
+  },
+  {
+    "id": 45,
+    "title": "TypeScript Deep Dive",
+    "fileSize": 1441253,
+    "blobPathname": "books/typescript-deep-dive.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/typescript-deep-dive.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/typescript-deep-dive.pdf"
+  },
+  {
+    "id": 46,
+    "title": "Understanding Programming Languages",
+    "fileSize": 889615,
+    "blobPathname": "books/understanding-programming-languages.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/understanding-programming-languages.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/understanding-programming-languages.pdf"
+  },
+  {
+    "id": 47,
+    "title": "x86 64 Assembly Language Programming with Ubuntu",
+    "fileSize": 1867961,
+    "blobPathname": "books/x86-64-assembly-language-programming-with-ubuntu.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/x86-64-assembly-language-programming-with-ubuntu.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/x86-64-assembly-language-programming-with-ubuntu.pdf"
   }
 ]
