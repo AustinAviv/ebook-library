@@ -7,7 +7,7 @@ namespace WikiLibrary.Services;
 
 public class BookService
 {
-    public const int PageSize = 50;
+    public const int PageSize = 6;
     private const int MaxQueryCacheSize = 64;
 
     private readonly HttpClient _http;

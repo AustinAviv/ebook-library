@@ -22,15 +22,18 @@ else if (!Books.IsLoaded)
         <h2 class="section-title" style="margin:0;border:none;">Loading Books...</h2>
     </div>
 
-    <div class="book-list-container">
-        @for (int i = 0; i < 4; i++)
+    <div class="book-grid">
+        @for (int i = 0; i < 6; i++)
         {
-            <div class="skeleton-row">
-                <div class="skeleton-body">
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line short"></div>
+            <div class="skeleton-card">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line medium" style="height:20px;"></div>
+                <div class="skeleton-line" style="width:50%;"></div>
+                <div class="skeleton-line short" style="margin-top:auto;"></div>
+                <div style="display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border-default);">
+                    <div class="skeleton-line" style="flex:1;height:32px;"></div>
+                    <div class="skeleton-line" style="width:68px;height:32px;"></div>
                 </div>
-                <div class="skeleton-btn"></div>
             </div>
         }
     </div>
@@ -45,19 +48,40 @@ else
 
     <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:baseline;margin-top:1.5em;margin-bottom:12px;">
         <h2 class="section-title" style="margin:0;border:none;">Available Books</h2>
-        <span class="muted">@Books.Count book@(Books.Count == 1 ? "" : "s")</span>
+        <span class="muted">Showing @pageItems.Count of @total book@(total == 1 ? "" : "s")</span>
     </div>
 
-    <BookList Books="Books.All" />
+    <BookList Books="pageItems" />
+    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" PageSize="BookService.PageSize" />
 }
 
 @code {
+    [Parameter, SupplyParameterFromQuery(Name = "page")] public int? PageNo { get; set; }
+
+    private int total;
+    private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
+
     protected override void OnInitialized()
     {
         Books.LoadedChanged += OnLoaded;
     }
 
-    private void OnLoaded() => InvokeAsync(StateHasChanged);
+    private void OnLoaded()
+    {
+        UpdatePage();
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        UpdatePage();
+    }
+
+    private void UpdatePage()
+    {
+        total = Books.Count;
+        pageItems = BookService.Page(Books.All, PageNo ?? 1, BookService.PageSize);
+    }
 
     private async Task Retry() => await Books.RetryAsync();
 

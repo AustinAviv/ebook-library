@@ -9,32 +9,36 @@
 }
 else
 {
-    <div class="book-list-container">
+    <div class="book-grid">
         @foreach (var b in Books)
         {
-            <article class="book-row">
-                <a href="/book/@b.Id" class="book-row-main" title="View details for @b.Title">
-                    <div class="book-details">
-                        <h3 class="book-title">@b.Title</h3>
-                        <div class="book-meta">
-                            <span class="book-badge">PDF</span>
-                            <span class="book-size">@b.FileSizeText</span>
-                            @if (BookService.GetDownloads(b.Id) is int count && count > 0)
-                            {
-                                <span class="book-downloads">@count.ToString("N0") downloads</span>
-                            }
-                            @if (b.HasCategory)
-                            {
-                                <span class="book-badge">@b.Category</span>
-                            }
-                            @if (b.HasAuthor)
-                            {
-                                <span class="book-author">by @b.Author</span>
-                            }
-                        </div>
+            <article class="book-card-item">
+                <div class="book-card-top">
+                    <div class="book-card-tags">
+                        <span class="book-badge">PDF</span>
+                        @if (b.HasCategory)
+                        {
+                            <a href="/category/@Uri.EscapeDataString(b.Category!)" class="book-badge category-link">@b.Category</a>
+                        }
                     </div>
-                </a>
-                <div class="book-actions">
+                    <a href="/book/@b.Id" class="book-card-title" title="@b.Title">
+                        @b.Title
+                    </a>
+                    @if (b.HasAuthor)
+                    {
+                        <div class="book-card-author">by @b.Author</div>
+                    }
+                </div>
+
+                <div class="book-card-meta">
+                    <span class="book-size">@b.FileSizeText</span>
+                    @if (BookService.GetDownloads(b.Id) is int count && count > 0)
+                    {
+                        <span class="book-downloads">@count.ToString("N0") downloads</span>
+                    }
+                </div>
+
+                <div class="book-card-actions">
                     <a href="/api/download?id=@b.Id" download class="btn-download" title="Direct download PDF">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -43,7 +47,7 @@ else
                         </svg>
                         <span>Download</span>
                     </a>
-                    <a href="/book/@b.Id" class="btn-read">
+                    <a href="/book/@b.Id" class="btn-read" title="View details and read online">
                         <span>Details</span>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="9 18 15 12 9 6"></polyline>

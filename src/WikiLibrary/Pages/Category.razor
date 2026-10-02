@@ -8,15 +8,18 @@
 @if (!Books.IsLoaded && Books.LoadError is null)
 {
     <p class="muted count-info">Loading books in category...</p>
-    <div class="book-list-container">
-        @for (int i = 0; i < 3; i++)
+    <div class="book-grid">
+        @for (int i = 0; i < 6; i++)
         {
-            <div class="skeleton-row">
-                <div class="skeleton-body">
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line short"></div>
+            <div class="skeleton-card">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line medium" style="height:20px;"></div>
+                <div class="skeleton-line" style="width:50%;"></div>
+                <div class="skeleton-line short" style="margin-top:auto;"></div>
+                <div style="display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border-default);">
+                    <div class="skeleton-line" style="flex:1;height:32px;"></div>
+                    <div class="skeleton-line" style="width:68px;height:32px;"></div>
                 </div>
-                <div class="skeleton-btn"></div>
             </div>
         }
     </div>
@@ -29,7 +32,7 @@ else
     </p>
 
     <BookList Books="pageItems" />
-    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" PageSize="BookService.PageSize" />
 }
 
 @code {
