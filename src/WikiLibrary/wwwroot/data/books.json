@@ -62,5 +62,13 @@
     "blobPathname": "books/an-introduction-to-the-c-programming-language-and-software-design.pdf",
     "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/an-introduction-to-the-c-programming-language-and-software-design.pdf?download=1",
     "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/an-introduction-to-the-c-programming-language-and-software-design.pdf"
+  },
+  {
+    "id": 17,
+    "title": "Comprehensive Rust",
+    "fileSize": 2411737,
+    "blobPathname": "books/comprehensive-rust.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/comprehensive-rust.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/comprehensive-rust.pdf"
   }
 ]
