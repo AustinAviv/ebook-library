@@ -8,7 +8,7 @@
   "scripts": {
     "prepare-library": "node --env-file=.env.local scripts/prepare-library.mjs ./pdfs",
     "build:site": "dotnet publish src/WikiLibrary -c Release -o .publish && node scripts/copy-site.mjs",
-    "deploy": "npm run build:site && vercel deploy --prod"
+    "deploy": "npm run build:site && vercel build --prod && vercel deploy --prebuilt --prod"
   },
   "dependencies": {
     "@upstash/redis": "^1.35.0",
