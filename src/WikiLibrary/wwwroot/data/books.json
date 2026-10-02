@@ -70,5 +70,13 @@
     "blobPathname": "books/comprehensive-rust.pdf",
     "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/comprehensive-rust.pdf?download=1",
     "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/comprehensive-rust.pdf"
+  },
+  {
+    "id": 18,
+    "title": "JavaScript for beginners",
+    "fileSize": 611851,
+    "blobPathname": "books/javascript-for-beginners.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-for-beginners.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/javascript-for-beginners.pdf"
   }
 ]
