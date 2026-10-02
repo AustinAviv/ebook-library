@@ -24,8 +24,11 @@ public class Book
         get
         {
             if (FileSize <= 0) return "—";
-            double mb = FileSize / 1024.0 / 1024.0;
-            return mb >= 1 ? $"{mb:0.1} MB" : $"{FileSize / 1024.0:0} KB";
+            double mb = FileSize / (1024.0 * 1024.0);
+            if (mb >= 1.0)
+                return $"{mb:F1} MB";
+            double kb = FileSize / 1024.0;
+            return $"{kb:F0} KB";
         }
     }
 
