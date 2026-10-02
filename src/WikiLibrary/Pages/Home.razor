@@ -1,46 +1,26 @@
 @page "/"
 @inject BookService Books
 
-<PageTitle>Free Library — Open PDF Library</PageTitle>
+<PageTitle>Free Library — Open Digital Archive</PageTitle>
 
 @if (Books.LoadError is not null)
 {
-    <div class="alert-error">
+    <div class="alert-error" role="alert">
         The library catalogue could not be loaded: @Books.LoadError
     </div>
 }
 else
 {
-    <header class="home-hero">
-        <h1 class="hero-title">Free Library</h1>
-        <p class="hero-subtitle">
-            A fast, direct collection of <strong>@Books.Count.ToString("N0") PDF books</strong>.
-            Instant downloads, no account, no login required.
-        </p>
-    </header>
+    <h1 class="firstHeading">Welcome to Free Library</h1>
+    <p class="muted" style="margin-bottom:1.8em;font-size:1.05rem;line-height:1.7;">
+        An open digital archive of <strong>@Books.Count.ToString("N0") PDF books</strong> that anyone can read and download.
+        Free forever, no registration, no tracking.
+    </p>
 
-    @if (Books.Categories.Count > 0)
-    {
-        <section class="home-section">
-            <h2 class="section-title">Categories</h2>
-            <div class="cat-grid">
-                @foreach (var c in Books.Categories.Take(8))
-                {
-                    <a class="cat-card" href="/category/@Uri.EscapeDataString(c.Name)">
-                        <span class="cat-card-name">@c.Name</span>
-                        <span class="cat-card-count">@c.Count book@(c.Count == 1 ? "" : "s")</span>
-                    </a>
-                }
-            </div>
-            <p><a class="see-all" href="/categories">All @Books.Categories.Count categories</a></p>
-        </section>
-    }
+    <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:baseline;margin-top:1.5em;">
+        <h2 class="section-title" style="margin:0;border:none;">Available Books</h2>
+        <span class="muted">@Books.Count book@(Books.Count == 1 ? "" : "s")</span>
+    </div>
 
-    <section class="home-section">
-        <div class="section-header-row">
-            <h2 class="section-title">Available Books</h2>
-            <span class="section-meta">@Books.Count book@(Books.Count == 1 ? "" : "s")</span>
-        </div>
-        <BookList Books="Books.All" />
-    </section>
+    <BookList Books="Books.All" />
 }
