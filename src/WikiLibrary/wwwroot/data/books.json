@@ -28,5 +28,17 @@
     "title": "The Ultimate Python Handbook",
     "fileSize": 53738617,
     "blobPathname": "books/the-ultimate-python-handbook.pdf"
+  },
+  {
+    "id": 14,
+    "title": "Elements of Kotlin",
+    "fileSize": 1921689,
+    "blobPathname": "books/elements-of-kotlin.pdf"
+  },
+  {
+    "id": 15,
+    "title": "TypeScript Notes for Professionals",
+    "fileSize": 1167336,
+    "blobPathname": "books/typescript-notes-for-professionals.pdf"
   }
 ]
