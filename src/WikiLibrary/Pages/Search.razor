@@ -11,7 +11,7 @@
 else
 {
     <p class="muted count-info">
-        @total.ToString("N0") result@(total == 1 ? "" : "s") for "<strong style="color:var(--ink)">@Query</strong>"
+        @total.ToString("N0") result@(total == 1 ? "" : "s") for "<strong style="color:var(--text-primary)">@Query</strong>"
     </p>
     <BookList Books="pageItems" />
     <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />

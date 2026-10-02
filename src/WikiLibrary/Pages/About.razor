@@ -1,18 +1,142 @@
 @page "/about"
-<PageTitle>About - Free Library</PageTitle>
-<h1 class="firstHeading">About Free Library</h1>
+<PageTitle>Architecture and Tech Stack - Free Library</PageTitle>
 
-<p>
-    <strong>Free Library</strong> is a static website: the entire catalogue is loaded once into your browser,
-    so searching and browsing are <em>instant</em>. The only server work happens when you press
-    <em>Download PDF</em> - a tiny serverless function counts the download and sends you to a
-    short-lived link for the file.
+<h1 class="firstHeading">Architecture and Tech Stack</h1>
+
+<p class="muted" style="margin-bottom:1.5em;font-size:0.95rem;line-height:1.6;">
+    Free Library is built with modern, high-performance web engineering standards.
+    The entire digital catalogue is loaded once into browser memory for instantaneous client-side navigation,
+    backed by serverless edge functions and distributed cloud storage.
 </p>
-<p>
-    There are <strong>no accounts, no cookies and no tracking</strong> beyond an anonymous download counter.
-    Every book is freely available and provided as-is.
-</p>
-<p>
-    Built with <a href="https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor" rel="noopener noreferrer">Blazor WebAssembly</a>
-    and deployed on <a href="https://vercel.com" rel="noopener noreferrer">Vercel</a>.
+
+<h2 class="section-title">System Architecture</h2>
+
+<div class="tech-grid">
+    <div class="tech-card">
+        <div class="tech-card-header">
+            <span class="tech-card-title">Frontend Framework</span>
+            <span class="tech-card-tag">Blazor WASM</span>
+        </div>
+        <p class="tech-card-desc">
+            Single Page Application built with ASP.NET Core Blazor WebAssembly on .NET 10.
+            Executes entirely client-side in the browser on a WebAssembly virtual machine.
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <div class="tech-card-header">
+            <span class="tech-card-title">Core Language</span>
+            <span class="tech-card-tag">C# 13</span>
+        </div>
+        <p class="tech-card-desc">
+            Type-safe, modern C# 13 for all application logic, routing, component state management,
+            and custom data structures with zero JavaScript framework dependencies.
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <div class="tech-card-header">
+            <span class="tech-card-title">Search & DSA Engine</span>
+            <span class="tech-card-tag">Algorithms</span>
+        </div>
+        <p class="tech-card-desc">
+            In-memory Inverted Index for fast multi-token candidate intersection, Prefix Trie for real-time
+            keystroke search, bounded LRU query cache, and O(1) letter hash buckets.
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <div class="tech-card-header">
+            <span class="tech-card-title">Serverless API</span>
+            <span class="tech-card-tag">Node.js 22</span>
+        </div>
+        <p class="tech-card-desc">
+            Lightweight Vercel Serverless Functions written in modern JavaScript (ESM).
+            Handles rate limiting, download analytics, and instant 302 edge redirects in under 20 milliseconds.
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <div class="tech-card-header">
+            <span class="tech-card-title">Storage & CDN</span>
+            <span class="tech-card-tag">Vercel Blob</span>
+        </div>
+        <p class="tech-card-desc">
+            PDF files are stored in a public Vercel Blob store and distributed across Vercel's global Anycast Edge Network,
+            serving downloads directly from edge caches at line rate.
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <div class="tech-card-header">
+            <span class="tech-card-title">Database & Cache</span>
+            <span class="tech-card-tag">Upstash Redis</span>
+        </div>
+        <p class="tech-card-desc">
+            Serverless in-memory Redis KV database providing atomic sliding-window IP rate limiting
+            (25 requests per 2-minute window) and live download statistics.
+        </p>
+    </div>
+</div>
+
+<h2 class="section-title">Technical Specifications</h2>
+
+<table class="tech-table">
+    <thead>
+        <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Implementation Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Client Runtime</strong></td>
+            <td><code>WebAssembly (WASM)</code></td>
+            <td>Near-native bytecode execution in browser with AOT compilation and assembly trimming</td>
+        </tr>
+        <tr>
+            <td><strong>Frontend</strong></td>
+            <td><code>Blazor .NET 10</code></td>
+            <td>Razor component model, C# 13, zero third-party CSS or JS frameworks</td>
+        </tr>
+        <tr>
+            <td><strong>Design System</strong></td>
+            <td><code>Vanilla CSS</code></td>
+            <td>Engineering-grade CSS variables, dark and light modes, zero-FOUC localStorage persistence</td>
+        </tr>
+        <tr>
+            <td><strong>Search Engine</strong></td>
+            <td><code>In-Memory DSA</code></td>
+            <td>Inverted Index token sets, Prefix Trie, bounded LRU query cache (64 slots)</td>
+        </tr>
+        <tr>
+            <td><strong>Edge API</strong></td>
+            <td><code>Vercel Functions</code></td>
+            <td>ESM handlers on Node.js 22 runtime: /api/download and /api/stats</td>
+        </tr>
+        <tr>
+            <td><strong>Edge Cache</strong></td>
+            <td><code>Anycast CDN</code></td>
+            <td>HTTP 302 caching (s-maxage=604800) and worldwide Anycast Blob caching</td>
+        </tr>
+        <tr>
+            <td><strong>Distributed KV</strong></td>
+            <td><code>Upstash Redis</code></td>
+            <td>Serverless Redis REST API for sliding rate limiter and download counters</td>
+        </tr>
+        <tr>
+            <td><strong>CLI & Automation</strong></td>
+            <td><code>C# LibraryTool</code></td>
+            <td>Custom CLI tool for PDF catalog generation, Vercel Blob synchronization, and CI/CD</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 class="section-title">Privacy and Security Measures</h2>
+
+<p class="muted" style="line-height:1.6;">
+    Free Library requires <strong>no accounts, no cookies, no logins, and no advertising trackers</strong>.
+    The only dynamic server processing is an anonymous download counter and an automated sliding-window rate limiter
+    to protect network bandwidth against automated scrapers.
 </p>

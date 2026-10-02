@@ -5,7 +5,7 @@
 
 <header class="topbar">
     <a class="brand" href="/">
-        <img src="logo.svg" alt="Free Library" width="32" height="32" />
+        <img src="logo.svg" alt="Free Library" width="28" height="28" />
         <span>Free Library</span>
     </a>
 
@@ -13,13 +13,13 @@
         <form class="searchbox" @onsubmit="Submit" @onsubmit:preventDefault>
             <div class="search-input-wrapper">
                 <span class="search-icon-prefix" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </span>
-                <input type="search" placeholder="Search by book name..."
-                       aria-label="Search" @bind="query" @bind:event="oninput" />
+                <input type="search" placeholder="Search by title, author, or keyword..."
+                       aria-label="Search books" @bind="query" @bind:event="oninput" />
             </div>
             <button type="submit">Search</button>
         </form>
@@ -29,7 +29,7 @@
         <button class="theme-toggle-btn" @onclick="ToggleTheme" title="Toggle dark/light theme" aria-label="Toggle theme">
             @if (isDark)
             {
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="5"></circle>
                     <line x1="12" y1="1" x2="12" y2="3"></line>
                     <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -43,7 +43,7 @@
             }
             else
             {
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
             }
@@ -56,18 +56,78 @@
         <div class="sidebar-section">
             <h3 class="sidebar-heading">Navigation</h3>
             <ul class="sidebar-menu">
-                <li><NavLink href="" Match="NavLinkMatch.All">Library</NavLink></li>
-                <li><NavLink href="random">Random Book</NavLink></li>
-                <li><NavLink href="a-z">All Books (A-Z)</NavLink></li>
-                <li><NavLink href="about">About</NavLink></li>
+                <li>
+                    <NavLink href="" Match="NavLinkMatch.All">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Library</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="a-z">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" y1="6" x2="20" y2="6"></line>
+                            <line x1="4" y1="12" x2="14" y2="12"></line>
+                            <line x1="4" y1="18" x2="18" y2="18"></line>
+                        </svg>
+                        <span>All Books (A-Z)</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="categories">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>Categories</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="random">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 3 21 3 21 8"></polyline>
+                            <line x1="4" y1="20" x2="21" y2="3"></line>
+                            <polyline points="21 16 21 21 16 21"></polyline>
+                            <line x1="15" y1="15" x2="21" y2="21"></line>
+                            <line x1="4" y1="4" x2="9" y2="9"></line>
+                        </svg>
+                        <span>Random Book</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="about">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <span>Architecture & Stack</span>
+                    </NavLink>
+                </li>
             </ul>
         </div>
 
         <div class="sidebar-section">
-            <h3 class="sidebar-heading">Catalogue</h3>
+            <h3 class="sidebar-heading">Collection</h3>
             <div class="sidebar-stats-box">
                 <span class="sidebar-stat-number">@Books.Count</span>
-                <span class="sidebar-stat-label">PDF books available</span>
+                <span class="sidebar-stat-label">Indexed PDF Books</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-heading">Tech Stack</h3>
+            <div class="sidebar-tech-stack">
+                <a href="/about" class="sidebar-tech-badge">.NET 10</a>
+                <a href="/about" class="sidebar-tech-badge">C# 13</a>
+                <a href="/about" class="sidebar-tech-badge">Blazor WASM</a>
+                <a href="/about" class="sidebar-tech-badge">Vercel Edge</a>
+                <a href="/about" class="sidebar-tech-badge">Upstash Redis</a>
+                <a href="/about" class="sidebar-tech-badge">Vanilla CSS</a>
             </div>
         </div>
     </aside>
@@ -78,7 +138,10 @@
 </div>
 
 <footer class="footer">
-    <p>Free Library - Wikipedia-style digital archive for free PDF books. No account required.</p>
+    <span>Free Library - Open digital archive for free PDF books. No account required.</span>
+    <div class="footer-tech">
+        <a href="/about" style="color:inherit;">Stack: Blazor WebAssembly (.NET 10 / C# 13) | Vercel Edge | Upstash Redis</a>
+    </div>
 </footer>
 
 @code {
