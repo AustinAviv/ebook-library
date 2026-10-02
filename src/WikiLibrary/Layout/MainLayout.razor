@@ -19,7 +19,61 @@
                     </svg>
                 </span>
                 <input type="search" placeholder="Search by title, author, or keyword..."
-                       aria-label="Search books" @bind="query" @bind:event="oninput" />
+                       aria-label="Search books"
+                       value="@query"
+                       @oninput="OnQueryInput"
+                       @onfocus="OnInputFocus"
+                       @onblur="OnInputBlur"
+                       @onkeydown="OnKeyDown" />
+                @if (isOpen && !string.IsNullOrWhiteSpace(query))
+                {
+                    <div class="search-dropdown" @onmousedown:preventDefault>
+                        @if (searchResults.Count > 0)
+                        {
+                            <div class="search-dropdown-header">
+                                <span>Matching Books (@searchResults.Count)</span>
+                                <span class="search-dropdown-shortcut">ESC to close</span>
+                            </div>
+                            <ul class="search-dropdown-list">
+                                @for (int i = 0; i < searchResults.Count; i++)
+                                {
+                                    var book = searchResults[i];
+                                    var isSelected = i == selectedIndex;
+                                    <li class="search-dropdown-item @(isSelected ? "selected" : "")">
+                                        <a href="/book/@book.Id" @onclick="() => SelectBook(book.Id)">
+                                            <div class="search-item-info">
+                                                <span class="search-item-title">@book.Title</span>
+                                                <span class="search-item-author">@(book.HasAuthor ? book.Author : "Unknown Author")</span>
+                                            </div>
+                                            <div class="search-item-meta">
+                                                @if (book.HasCategory)
+                                                {
+                                                    <span class="search-item-category">@book.Category</span>
+                                                }
+                                                <span class="search-item-size">@book.FileSizeText</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="search-dropdown-footer">
+                                <button type="button" class="search-view-all-btn" @onclick="Submit">
+                                    <span>View all search results for "@query"</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        }
+                        else if (query.Trim().Length >= 2)
+                        {
+                            <div class="search-dropdown-empty">
+                                <p>No books found matching "<strong>@query</strong>"</p>
+                                <span class="search-empty-tip">Try searching by topic, language, or author name.</span>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
             <button type="submit">Search</button>
         </form>
@@ -126,10 +180,20 @@
 @code {
     private string query = "";
     private bool isDark = false;
+    private bool isOpen = false;
+    private int selectedIndex = -1;
+    private List<Book> searchResults = new();
 
     protected override void OnInitialized()
     {
         Books.LoadedChanged += OnLoaded;
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        isOpen = false;
+        StateHasChanged();
     }
 
     private void OnLoaded() => InvokeAsync(StateHasChanged);
@@ -137,6 +201,7 @@
     public void Dispose()
     {
         Books.LoadedChanged -= OnLoaded;
+        Nav.LocationChanged -= OnLocationChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -163,9 +228,92 @@
         catch { }
     }
 
+    private void OnQueryInput(ChangeEventArgs e)
+    {
+        query = e.Value?.ToString() ?? "";
+        selectedIndex = -1;
+        if (query.Trim().Length >= 1)
+        {
+            searchResults = Books.Search(query).Take(5).ToList();
+            isOpen = true;
+        }
+        else
+        {
+            searchResults.Clear();
+            isOpen = false;
+        }
+    }
+
+    private void OnInputFocus()
+    {
+        if (query.Trim().Length >= 1)
+        {
+            searchResults = Books.Search(query).Take(5).ToList();
+            isOpen = true;
+        }
+    }
+
+    private void OnInputBlur()
+    {
+        isOpen = false;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (!isOpen)
+        {
+            if (e.Key == "ArrowDown" && query.Trim().Length >= 1)
+            {
+                searchResults = Books.Search(query).Take(5).ToList();
+                isOpen = true;
+                selectedIndex = 0;
+            }
+            return;
+        }
+
+        if (e.Key == "ArrowDown")
+        {
+            if (searchResults.Count > 0)
+            {
+                selectedIndex = (selectedIndex + 1) % searchResults.Count;
+            }
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            if (searchResults.Count > 0)
+            {
+                selectedIndex = (selectedIndex - 1 + searchResults.Count) % searchResults.Count;
+            }
+        }
+        else if (e.Key == "Escape")
+        {
+            isOpen = false;
+            selectedIndex = -1;
+        }
+        else if (e.Key == "Enter")
+        {
+            if (selectedIndex >= 0 && selectedIndex < searchResults.Count)
+            {
+                SelectBook(searchResults[selectedIndex].Id);
+            }
+            else
+            {
+                Submit();
+            }
+        }
+    }
+
+    private void SelectBook(int id)
+    {
+        isOpen = false;
+        query = "";
+        Nav.NavigateTo($"/book/{id}");
+    }
+
     private void Submit()
     {
         var q = query.Trim();
+        isOpen = false;
         if (q.Length > 0)
             Nav.NavigateTo($"/search?q={Uri.EscapeDataString(q)}");
     }
