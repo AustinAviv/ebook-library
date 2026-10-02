@@ -4,6 +4,9 @@
   "buildCommand": null,
   "installCommand": "npm install",
   "outputDirectory": "public",
+  "git": {
+    "deploymentEnabled": false
+  },
   "functions": {
     "api/download.js": { "includeFiles": "api/_catalog.json", "maxDuration": 10 },
     "api/stats.js": { "maxDuration": 10 }
