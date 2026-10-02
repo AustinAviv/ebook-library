@@ -60,14 +60,7 @@ static async Task AddBooksAsync(string[] args)
     var folder = args.FirstOrDefault(a => !a.StartsWith('-')) ?? "./pdfs";
     var force  = args.Contains("--force");
 
-    // ── 1. Load BLOB_READ_WRITE_TOKEN ────────────────────────────────────────
-    var token = GetEnvVar("BLOB_READ_WRITE_TOKEN")
-        ?? throw new InvalidOperationException(
-            "BLOB_READ_WRITE_TOKEN is missing.\n" +
-            "Run:  vercel env pull .env.local\n" +
-            "Then re-run this command.");
-
-    // ── 2. Find PDFs ─────────────────────────────────────────────────────────
+    // ── 1. Find PDFs ─────────────────────────────────────────────────────────
     if (!Directory.Exists(folder))
         throw new DirectoryNotFoundException($"Folder not found: {folder}");
 
@@ -79,7 +72,7 @@ static async Task AddBooksAsync(string[] args)
     Console.WriteLine($"Found {files.Count} PDF(s) in {folder}");
     if (files.Count == 0) return;
 
-    // ── 3. Load existing books.json ──────────────────────────────────────────
+    // ── 2. Load existing books.json ──────────────────────────────────────────
     var existing = new List<JsonObject>();
     if (File.Exists(BooksJson))
     {
@@ -99,7 +92,7 @@ static async Task AddBooksAsync(string[] args)
         ? existing.Max(b => b["id"]?.GetValue<int>() ?? 0) + 1
         : 1;
 
-    // ── 4. Assign blob pathnames & IDs (single-threaded, deterministic) ──────
+    // ── 3. Assign blob pathnames & IDs (single-threaded, deterministic) ──────
     var used = new HashSet<string>(StringComparer.Ordinal);
     var jobs = files.Select(file =>
     {
@@ -116,15 +109,30 @@ static async Task AddBooksAsync(string[] args)
         return (file, pathname, id, existing: existingEntry);
     }).ToList();
 
+    // ── 4. Check token only if uploads are needed ────────────────────────────
+    var token = GetEnvVar("BLOB_READ_WRITE_TOKEN");
+    var needsUpload = jobs.Any(j => j.existing is null || force);
+    if (needsUpload && string.IsNullOrWhiteSpace(token))
+    {
+        throw new InvalidOperationException(
+            "BLOB_READ_WRITE_TOKEN is missing in environment.\n" +
+            "New PDF(s) need to be uploaded to Vercel Blob.\n" +
+            "Please add BLOB_READ_WRITE_TOKEN to your GitHub repository secrets:\n" +
+            "https://github.com/AustinAviv/ebook-library/settings/secrets/actions");
+    }
+
     // ── 5. Upload with bounded concurrency ───────────────────────────────────
     using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-    http.DefaultRequestHeaders.Authorization =
-        new AuthenticationHeaderValue("Bearer", token);
-    http.DefaultRequestHeaders.TryAddWithoutValidation("x-api-version",        "7");
-    http.DefaultRequestHeaders.TryAddWithoutValidation("x-vercel-blob-access",  "private");
-    http.DefaultRequestHeaders.TryAddWithoutValidation("x-add-random-suffix",  "0");
-    http.DefaultRequestHeaders.TryAddWithoutValidation("x-allow-overwrite",    "1");
-    http.DefaultRequestHeaders.TryAddWithoutValidation("x-content-type",       "application/pdf");
+    if (!string.IsNullOrWhiteSpace(token))
+    {
+        http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+        http.DefaultRequestHeaders.TryAddWithoutValidation("x-api-version",        "7");
+        http.DefaultRequestHeaders.TryAddWithoutValidation("x-vercel-blob-access",  "private");
+        http.DefaultRequestHeaders.TryAddWithoutValidation("x-add-random-suffix",  "0");
+        http.DefaultRequestHeaders.TryAddWithoutValidation("x-allow-overwrite",    "1");
+        http.DefaultRequestHeaders.TryAddWithoutValidation("x-content-type",       "application/pdf");
+    }
 
     var books     = new List<JsonObject>(jobs.Count);
     var booksLock = new object();
