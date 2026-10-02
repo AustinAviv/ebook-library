@@ -1,80 +1,80 @@
 :root, [data-theme="light"] {
-  --bg-page:           #f6f8fa;
+  --bg-page:           #f5f6f8;
   --bg-surface:        #ffffff;
-  --bg-sidebar:        #ffffff;
-  --bg-subtle:         #f3f4f6;
-  --bg-hover:          #f3f4f6;
-  --bg-active:         #ebeef1;
-  --bg-tag:            #eff2f5;
+  --bg-sidebar:        #fcfdfe;
+  --bg-subtle:         #f0f2f5;
+  --bg-hover:          #eaedf1;
+  --bg-active:         #e2e6eb;
+  --bg-tag:            #edf0f4;
 
-  --border-default:    #d0d7de;
-  --border-subtle:     #e8ecef;
-  --border-focus:      #0969da;
+  --border-default:    #d8dde4;
+  --border-subtle:     #e8ecf1;
+  --border-focus:      #2271d4;
 
-  --text-primary:      #1f2328;
-  --text-secondary:    #656d76;
-  --text-muted:        #6e7781;
+  --text-primary:      #282e36;
+  --text-secondary:    #5c6573;
+  --text-muted:        #768190;
   --text-inverse:      #ffffff;
 
-  --link-color:        #0969da;
-  --link-hover:        #0550ae;
+  --link-color:        #1a6cd3;
+  --link-hover:        #0f53a8;
 
-  --btn-download-bg:   #1f883d;
-  --btn-download-hover:#1a7f37;
+  --btn-download-bg:   #1e7e34;
+  --btn-download-hover:#19692c;
   --btn-download-text: #ffffff;
 
-  --btn-read-bg:       #ffffff;
-  --btn-read-border:   #d0d7de;
-  --btn-read-hover:    #f3f4f6;
-  --btn-read-text:     #1f2328;
+  --btn-read-bg:       #f8f9fa;
+  --btn-read-border:   #d8dde4;
+  --btn-read-hover:    #eaedf1;
+  --btn-read-text:     #282e36;
 
-  --badge-bg:          #eff2f5;
-  --badge-border:      #d0d7de;
-  --badge-text:        #24292f;
+  --badge-bg:          #edf0f4;
+  --badge-border:      #d8dde4;
+  --badge-text:        #303642;
 
   --tech-card-bg:      #ffffff;
-  --tech-card-border:  #d0d7de;
+  --tech-card-border:  #d8dde4;
 
   --font-sans:         'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-mono:         'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 [data-theme="dark"] {
-  --bg-page:           #0d1117;
-  --bg-surface:        #161b22;
-  --bg-sidebar:        #161b22;
-  --bg-subtle:         #1b2128;
-  --bg-hover:          #21262d;
-  --bg-active:         #282e36;
-  --bg-tag:            #21262d;
+  --bg-page:           #13171f;
+  --bg-surface:        #1a202a;
+  --bg-sidebar:        #171c24;
+  --bg-subtle:         #212835;
+  --bg-hover:          #262e3d;
+  --bg-active:         #2e3748;
+  --bg-tag:            #212835;
 
-  --border-default:    #30363d;
-  --border-subtle:     #21262d;
-  --border-focus:      #2f81f7;
+  --border-default:    #2c3543;
+  --border-subtle:     #212733;
+  --border-focus:      #539bf5;
 
-  --text-primary:      #e6edf3;
-  --text-secondary:    #848d97;
-  --text-muted:        #7d8590;
+  --text-primary:      #d0d8e2;
+  --text-secondary:    #8895a5;
+  --text-muted:        #6c7887;
   --text-inverse:      #ffffff;
 
-  --link-color:        #2f81f7;
-  --link-hover:        #58a6ff;
+  --link-color:        #6cb0f6;
+  --link-hover:        #8ec4f8;
 
   --btn-download-bg:   #238636;
   --btn-download-hover:#2ea043;
   --btn-download-text: #ffffff;
 
-  --btn-read-bg:       #21262d;
-  --btn-read-border:   #30363d;
-  --btn-read-hover:    #30363d;
-  --btn-read-text:     #c9d1d9;
+  --btn-read-bg:       #212835;
+  --btn-read-border:   #2c3543;
+  --btn-read-hover:    #262e3d;
+  --btn-read-text:     #c0ccd8;
 
-  --badge-bg:          #21262d;
-  --badge-border:      #30363d;
-  --badge-text:        #c9d1d9;
+  --badge-bg:          #212835;
+  --badge-border:      #2c3543;
+  --badge-text:        #b2bfce;
 
-  --tech-card-bg:      #161b22;
-  --tech-card-border:  #30363d;
+  --tech-card-bg:      #1a202a;
+  --tech-card-border:  #2c3543;
 }
 
 *, *::before, *::after {
@@ -98,6 +98,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {
@@ -425,7 +426,7 @@ input:focus-visible {
   flex: 1;
   min-width: 0;
   padding: 32px;
-  background-color: var(--bg-surface);
+  background-color: var(--bg-page);
 }
 
 .firstHeading, .page-title {
@@ -845,7 +846,7 @@ input:focus-visible {
 }
 
 .book-description-box {
-  background-color: var(--bg-page);
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 6px;
   padding: 16px 20px;
@@ -863,7 +864,7 @@ input:focus-visible {
   flex-wrap: wrap;
   gap: 4px;
   padding: 10px;
-  background-color: var(--bg-page);
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 6px;
   margin-bottom: 16px;
