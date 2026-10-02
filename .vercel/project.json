@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_OvWQrBUsyfzJBE9DSR0QdgqJhNzf",
+  "orgId": "team_5OXcQLxMeB6kAFot37ONfl7v",
+  "projectName": "ebook-library",
+  "settings": {
+    "createdAt": 1790933909140,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": "npm install",
+    "buildCommand": null,
+    "outputDirectory": "public",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
