@@ -2,18 +2,17 @@
 @inject BookService Books
 
 <PageTitle>Search: @Query — Free Library</PageTitle>
-<h1 class="firstHeading">Search results</h1>
+<h1 class="page-title">Search Results</h1>
 
 @if (string.IsNullOrWhiteSpace(Query))
 {
-    <p class="muted">Type something in the search box above to find books.</p>
+    <p class="muted">Type a book title in the search box above to search.</p>
 }
 else
 {
-    <p class="muted">
-        @total.ToString("N0") result(s) for "<strong style="color:var(--ink)">@Query</strong>".
+    <p class="muted count-info">
+        @total.ToString("N0") result@(total == 1 ? "" : "s") for "<strong style="color:var(--ink)">@Query</strong>"
     </p>
-    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
     <BookList Books="pageItems" />
     <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
 }

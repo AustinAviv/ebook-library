@@ -2,13 +2,12 @@
 @inject BookService Books
 
 <PageTitle>Category: @Name — Free Library</PageTitle>
-<h1 class="firstHeading">@Name</h1>
-<p class="muted">
-    @total.ToString("N0") book(s) in this category.
-    <a href="/categories" style="margin-left:.5em">← All categories</a>
+<h1 class="page-title">@Name</h1>
+<p class="muted count-info">
+    @total.ToString("N0") book@(total == 1 ? "" : "s") in this category.
+    <a href="/categories" style="margin-left:.75em;color:var(--burgundy)">← All categories</a>
 </p>
 
-<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
 <BookList Books="pageItems" />
 <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
 

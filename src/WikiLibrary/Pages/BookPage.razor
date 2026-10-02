@@ -5,37 +5,80 @@
 @if (book is null)
 {
     <PageTitle>Book not found — Free Library</PageTitle>
-    <h1 class="firstHeading">Book not found</h1>
-    <p>There is no book with id @Id. Try the <a href="/a-z">A–Z index</a>.</p>
+    <div class="not-found-card">
+        <h1 class="page-title">Book not found</h1>
+        <p class="muted">There is no book with ID #@Id.</p>
+        <p><a href="/" class="btn-read">← Return to library</a></p>
+    </div>
 }
 else
 {
     <PageTitle>@book.Title — Free Library</PageTitle>
-    <h1 class="firstHeading">@book.Title</h1>
-    <div class="tagline">From Free Library, the free PDF collection</div>
 
-    <table class="infobox">
-        <caption>@book.Title</caption>
-        <tr><th>Title</th><td>@book.Title</td></tr>
-        <tr><th>Author</th><td>@book.Author</td></tr>
-        <tr><th>Category</th><td><a href="/category/@Uri.EscapeDataString(book.Category)">@book.Category</a></td></tr>
-        <tr><th>Year</th><td>@book.YearText</td></tr>
-        <tr><th>Language</th><td>@book.Language</td></tr>
-        <tr><th>Pages</th><td>@book.PagesText</td></tr>
-        <tr><th>File size</th><td>@book.FileSizeText</td></tr>
-        <tr><th>Downloads</th><td>@(Books.GetDownloads(book.Id)?.ToString("N0") ?? "—")</td></tr>
-    </table>
+    <div class="book-detail-wrapper">
+        <nav class="book-breadcrumb">
+            <a href="/">← Library</a>
+            <span class="crumb-separator">/</span>
+            <span class="crumb-current">@book.Title</span>
+        </nav>
 
-    <p><b>@book.Title</b> is a book by @book.Author in the category
-       <a href="/category/@Uri.EscapeDataString(book.Category)">@book.Category</a>.</p>
-    <p>@book.Description</p>
+        <header class="book-header">
+            <h1 class="book-hero-title">@book.Title</h1>
+            <div class="book-meta-bar">
+                <span class="meta-pill">PDF Document</span>
+                <span class="meta-pill">@book.FileSizeText</span>
+                @if (Books.GetDownloads(book.Id) is int dl && dl > 0)
+                {
+                    <span class="meta-pill downloads-pill">@dl.ToString("N0") downloads</span>
+                }
+                @if (book.HasAuthor)
+                {
+                    <span class="meta-author">by <strong>@book.Author</strong></span>
+                }
+            </div>
+        </header>
 
-    <h2>Download</h2>
-    @* The "download" attribute stops Blazor from treating this as an in-app route,
-       so the browser really requests /api/download (which redirects to the PDF). *@
-    <div class="download-box">
-        <a class="download-link" href="/api/download?id=@book.Id" download>Download PDF</a>
-        <span class="muted">@book.FileSizeText — free, no login required</span>
+        <section class="book-card-primary">
+            <div class="book-card-content">
+                <div class="book-card-icon-area">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                </div>
+                <div class="book-card-info">
+                    <h3>Direct Download</h3>
+                    <p class="muted">Complete, unaltered PDF. Free forever, no account, no tracking.</p>
+                </div>
+            </div>
+
+            <div class="book-action-buttons">
+                <a class="btn-action-primary" href="/api/download?id=@book.Id" download>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download PDF (@book.FileSizeText)</span>
+                </a>
+                <a class="btn-action-secondary" href="/api/download?id=@book.Id" target="_blank" rel="noopener noreferrer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Read in Browser</span>
+                </a>
+            </div>
+        </section>
+
+        @if (book.HasDescription)
+        {
+            <section class="book-description-box">
+                <h2>About this book</h2>
+                <p>@book.Description</p>
+            </section>
+        }
     </div>
 }
 

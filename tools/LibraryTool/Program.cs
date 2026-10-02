@@ -103,7 +103,7 @@ static async Task AddBooksAsync(string[] args)
     var used = new HashSet<string>(StringComparer.Ordinal);
     var jobs = files.Select(file =>
     {
-        var slug      = Slugify(TitleFromFile(file));
+        var slug      = SlugifyFilename(file);
         var candidate = slug;
         var n         = 2;
         while (used.Contains(candidate)) candidate = $"{slug}-{n++}";
@@ -121,6 +121,7 @@ static async Task AddBooksAsync(string[] args)
     http.DefaultRequestHeaders.Authorization =
         new AuthenticationHeaderValue("Bearer", token);
     http.DefaultRequestHeaders.TryAddWithoutValidation("x-api-version",        "7");
+    http.DefaultRequestHeaders.TryAddWithoutValidation("x-vercel-blob-access",  "private");
     http.DefaultRequestHeaders.TryAddWithoutValidation("x-add-random-suffix",  "0");
     http.DefaultRequestHeaders.TryAddWithoutValidation("x-allow-overwrite",    "1");
     http.DefaultRequestHeaders.TryAddWithoutValidation("x-content-type",       "application/pdf");
@@ -162,19 +163,27 @@ static async Task AddBooksAsync(string[] args)
             }
 
             var fileInfo = new FileInfo(file);
+            var title = existingEntry?["title"]?.GetValue<string>() ?? TitleFromFile(file);
+
             var book = new JsonObject
             {
                 ["id"]          = id,
-                ["title"]       = existingEntry?["title"]?.GetValue<string>()       ?? TitleFromFile(file),
-                ["author"]      = existingEntry?["author"]?.GetValue<string>()      ?? "Unknown author",
-                ["description"] = existingEntry?["description"]?.GetValue<string>() ?? "No description yet.",
-                ["category"]    = existingEntry?["category"]?.GetValue<string>()    ?? "Uncategorized",
-                ["year"]        = existingEntry?["year"]?.GetValue<int>()           ?? 0,
-                ["language"]    = existingEntry?["language"]?.GetValue<string>()    ?? "English",
-                ["pages"]       = existingEntry?["pages"]?.GetValue<int>()          ?? 0,
+                ["title"]       = title,
                 ["fileSize"]    = fileInfo.Length,
                 ["blobPathname"]= pathname,
             };
+
+            var existingAuthor = existingEntry?["author"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(existingAuthor) && !existingAuthor.Equals("Unknown author", StringComparison.OrdinalIgnoreCase))
+                book["author"] = existingAuthor;
+
+            var existingCat = existingEntry?["category"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(existingCat) && !existingCat.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase))
+                book["category"] = existingCat;
+
+            var existingDesc = existingEntry?["description"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(existingDesc) && !existingDesc.Equals("No description yet.", StringComparison.OrdinalIgnoreCase))
+                book["description"] = existingDesc;
 
             lock (booksLock) books.Add(book);
 
@@ -287,11 +296,36 @@ static void CopyDirectory(string src, string dst)
         CopyDirectory(dir, Path.Combine(dst, Path.GetFileName(dir)));
 }
 
-static string TitleFromFile(string file) =>
-    Regex.Replace(
-        Path.GetFileNameWithoutExtension(file),
-        @"[_\-\.]+", " ")
-    .Trim();
+static string TitleFromFile(string file)
+{
+    var name = Path.GetFileNameWithoutExtension(file);
+
+    // Strip common scraper prefixes like 'dokumen.pub_', 'libgen.li_', '[z-lib.org]', etc.
+    name = Regex.Replace(name, @"^(dokumen\.pub_|libgen\.[a-z]+_|z-lib\.org_|\[.*?\]|\(.*?\))\s*", "", RegexOptions.IgnoreCase);
+
+    // Remove artifacts like '.110nbsped'
+    name = Regex.Replace(name, @"[-_\.]+(110|nbsp|ed)\b", "", RegexOptions.IgnoreCase);
+
+    // Turn underscores, dashes, dots into spaces
+    name = Regex.Replace(name, @"[_\-\.]+", " ");
+
+    // Collapse multiple spaces
+    name = Regex.Replace(name, @"\s+", " ").Trim();
+
+    if (name.Equals("thinkpython2", StringComparison.OrdinalIgnoreCase))
+        return "Think Python (2nd Edition)";
+
+    if (name.All(c => !char.IsLetter(c) || char.IsLower(c)))
+        name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name);
+
+    return string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(file) : name;
+}
+
+static string SlugifyFilename(string file)
+{
+    var raw = Regex.Replace(Path.GetFileNameWithoutExtension(file), @"[_\-\.]+", " ").Trim();
+    return Slugify(raw);
+}
 
 static string Slugify(string text)
 {

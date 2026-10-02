@@ -4,9 +4,5 @@ node_modules
 .publish
 bin
 obj
-pdfs/*.pdf
 public/*
 !public/.gitkeep
-
-.vercel
-.env*

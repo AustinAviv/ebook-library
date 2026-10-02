@@ -5,7 +5,7 @@ namespace WikiLibrary.Services;
 
 /// <summary>
 /// Holds the whole library in memory. Everything (search, filter, sort, paging)
-/// runs here in the browser, so it never needs another server request.
+/// runs in the browser, so it never needs another server request.
 /// </summary>
 public class BookService
 {
@@ -38,7 +38,8 @@ public class BookService
             _byId = books.ToDictionary(b => b.Id);
             _sorted = books.OrderBy(b => b.Title, StringComparer.OrdinalIgnoreCase).ToList();
             Categories = books
-                .GroupBy(b => b.Category)
+                .Where(b => b.HasCategory)
+                .GroupBy(b => b.Category!)
                 .Select(g => (Name: g.Key, Count: g.Count()))
                 .OrderByDescending(c => c.Count).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -68,7 +69,7 @@ public class BookService
 
     public Book? GetById(int id) => _byId.GetValueOrDefault(id);
 
-    /// <summary>Download count, or 0 for never-downloaded books; null if stats are unavailable.</summary>
+    /// <summary>Download count, or null if stats are unavailable.</summary>
     public int? GetDownloads(int id) =>
         _downloads.Count == 0 ? null : _downloads.GetValueOrDefault(id, 0);
 
@@ -98,7 +99,7 @@ public class BookService
         return _sorted
             .Select(b => (Book: b, Score: Score(b, terms)))
             .Where(x => x.Score > 0)
-            .OrderByDescending(x => x.Score)   // stable sort keeps A-Z order for ties
+            .OrderByDescending(x => x.Score)
             .Select(x => x.Book)
             .ToList();
     }
@@ -110,9 +111,9 @@ public class BookService
         {
             int s = 0;
             if (Has(b.Title, t)) s += 10;
-            if (Has(b.Author, t)) s += 5;
-            if (Has(b.Category, t)) s += 3;
-            if (Has(b.Description, t)) s += 1;
+            if (b.Author is not null && Has(b.Author, t)) s += 5;
+            if (b.Category is not null && Has(b.Category, t)) s += 3;
+            if (b.Description is not null && Has(b.Description, t)) s += 1;
             if (s == 0) return 0; // this word matched nothing -> not a result
             total += s;
         }

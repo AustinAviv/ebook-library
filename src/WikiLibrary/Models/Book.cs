@@ -1,27 +1,31 @@
 namespace WikiLibrary.Models;
 
-/// <summary>One book, exactly as stored in wwwroot/data/books.json.</summary>
+/// <summary>One book in the library catalogue.</summary>
 public class Book
 {
     public int Id { get; set; }
     public string Title { get; set; } = "";
-    public string Author { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string Category { get; set; } = "";
+    public string? Author { get; set; }
+    public string? Description { get; set; }
+    public string? Category { get; set; }
     public int Year { get; set; }
-    public string Language { get; set; } = "";
+    public string? Language { get; set; }
     public int Pages { get; set; }
     public long FileSize { get; set; }            // bytes
     public string BlobPathname { get; set; } = ""; // pathname only, never a full URL
 
-    /// <summary>"3.4 MB" style text for the infobox.</summary>
+    public bool HasAuthor => !string.IsNullOrWhiteSpace(Author) && !Author.Equals("Unknown author", StringComparison.OrdinalIgnoreCase);
+    public bool HasCategory => !string.IsNullOrWhiteSpace(Category) && !Category.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase);
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description) && !Description.Equals("No description yet.", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Formatted file size string e.g. "6.2 MB".</summary>
     public string FileSizeText
     {
         get
         {
             if (FileSize <= 0) return "—";
             double mb = FileSize / 1024.0 / 1024.0;
-            return mb >= 1 ? $"{mb:0.0} MB" : $"{FileSize / 1024.0:0} KB";
+            return mb >= 1 ? $"{mb:0.1} MB" : $"{FileSize / 1024.0:0} KB";
         }
     }
 

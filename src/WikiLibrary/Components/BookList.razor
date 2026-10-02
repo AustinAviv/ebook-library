@@ -1,31 +1,55 @@
-@* A styled table of books, reused by every list page. *@
+@using WikiLibrary.Models
+
 @if (Books.Count == 0)
 {
-    <p style="color:var(--muted);font-style:italic;padding:1em 0">No books found.</p>
+    <div class="empty-books-state">
+        <p>No books found.</p>
+    </div>
 }
 else
 {
-    <table class="wikitable">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Category</th>
-                <th>Year</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var b in Books)
-            {
-                <tr>
-                    <td><a href="/book/@b.Id">@b.Title</a></td>
-                    <td style="color:var(--ink-soft)">@b.Author</td>
-                    <td><a href="/category/@Uri.EscapeDataString(b.Category)" style="color:var(--forest)">@b.Category</a></td>
-                    <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">@b.YearText</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="book-list-container">
+        @foreach (var b in Books)
+        {
+            <article class="book-row">
+                <a href="/book/@b.Id" class="book-row-main" title="View details for @b.Title">
+                    <span class="book-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </span>
+                    <div class="book-details">
+                        <h3 class="book-title">@b.Title</h3>
+                        <div class="book-meta">
+                            <span class="book-badge">PDF</span>
+                            <span class="book-size">@b.FileSizeText</span>
+                            @if (b.HasAuthor)
+                            {
+                                <span class="book-author">by @b.Author</span>
+                            }
+                        </div>
+                    </div>
+                </a>
+                <div class="book-actions">
+                    <a href="/api/download?id=@b.Id" download class="btn-download" title="Direct download PDF">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Download</span>
+                    </a>
+                    <a href="/book/@b.Id" class="btn-read">
+                        <span>Read</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+        }
+    </div>
 }
 
 @code {
