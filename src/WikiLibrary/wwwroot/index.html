@@ -26,17 +26,57 @@
         window.getTheme = function() {
             return document.documentElement.getAttribute('data-theme') || 'light';
         };
+        window.loadCatalogCache = function() {
+            try { return localStorage.getItem('library-books-cache'); } catch(e) { return null; }
+        };
+        window.saveCatalogCache = function(data) {
+            try { localStorage.setItem('library-books-cache', data); } catch(e) {}
+        };
+        window.clearAppCacheAndReload = function() {
+            try { localStorage.clear(); } catch(e) {}
+            if (window.caches) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(n) { caches.delete(n); });
+                    window.location.reload();
+                }).catch(function() { window.location.reload(); });
+            } else {
+                window.location.reload();
+            }
+        };
     </script>
     <link rel="stylesheet" href="css/wiki.css" />
     <script type="importmap"></script>
 </head>
 <body>
     <div id="app">
-        <div class="initial-loader">
+        <div class="initial-loader" id="loader-box">
             <div class="loader-spinner"></div>
-            <p>Loading library catalogue...</p>
+            <p id="loader-msg">Loading library catalogue...</p>
+            <div id="loader-fallback" style="display:none;margin-top:16px;flex-direction:column;gap:10px;align-items:center;">
+                <p style="font-size:0.8125rem;color:var(--text-muted);margin:0;">Initialization is taking longer than expected.</p>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" class="btn-action-primary" onclick="window.location.reload()" style="padding:6px 14px;font-size:0.8125rem;">Reload</button>
+                    <button type="button" class="btn-action-secondary" onclick="window.clearAppCacheAndReload()" style="padding:6px 14px;font-size:0.8125rem;">Clear Cache & Reload</button>
+                </div>
+            </div>
         </div>
     </div>
+    <script>
+        (function() {
+            setTimeout(function() {
+                var box = document.getElementById('loader-fallback');
+                if (box) box.style.display = 'flex';
+            }, 8000);
+            function showError() {
+                var box = document.getElementById('loader-fallback');
+                if (box) box.style.display = 'flex';
+                var msg = document.getElementById('loader-msg');
+                if (msg) msg.textContent = 'Connection interrupted while loading components.';
+            }
+            window.addEventListener('error', showError);
+            window.addEventListener('unhandledrejection', showError);
+        })();
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>

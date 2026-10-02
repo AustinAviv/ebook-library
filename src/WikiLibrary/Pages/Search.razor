@@ -1,10 +1,28 @@
 @page "/search"
+@implements IDisposable
 @inject BookService Books
 
 <PageTitle>Search: @Query - Free Library</PageTitle>
 <h1 class="page-title">Search Results</h1>
 
-@if (string.IsNullOrWhiteSpace(Query))
+@if (!Books.IsLoaded && Books.LoadError is null)
+{
+    <p class="muted count-info">Searching catalogue...</p>
+    <div class="book-list-container">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="skeleton-row">
+                <div class="skeleton-icon"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+                <div class="skeleton-btn"></div>
+            </div>
+        }
+    </div>
+}
+else if (string.IsNullOrWhiteSpace(Query))
 {
     <p class="muted">Type a book title in the search box above to search.</p>
 }
@@ -24,10 +42,31 @@ else
     private int total;
     private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
 
+    protected override void OnInitialized()
+    {
+        Books.LoadedChanged += OnLoaded;
+    }
+
+    private void OnLoaded()
+    {
+        UpdateResults();
+        InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnParametersSet()
+    {
+        UpdateResults();
+    }
+
+    private void UpdateResults()
     {
         var results = Books.Search(Query ?? "");
         total = results.Count;
         pageItems = BookService.Page(results, PageNo ?? 1);
+    }
+
+    public void Dispose()
+    {
+        Books.LoadedChanged -= OnLoaded;
     }
 }

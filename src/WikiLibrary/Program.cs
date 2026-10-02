@@ -13,8 +13,7 @@ builder.Services.AddSingleton<BookService>();
 var host = builder.Build();
 
 var books = host.Services.GetRequiredService<BookService>();
-await books.LoadAsync();
-
+_ = books.EnsureLoadedAsync();
 _ = books.LoadStatsAsync();
 
 await host.RunAsync();

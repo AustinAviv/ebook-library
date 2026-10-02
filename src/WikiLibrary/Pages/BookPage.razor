@@ -2,7 +2,22 @@
 @implements IDisposable
 @inject BookService Books
 
-@if (book is null)
+@if (!Books.IsLoaded && Books.LoadError is null)
+{
+    <PageTitle>Loading book - Free Library</PageTitle>
+    <div class="book-detail-wrapper">
+        <div class="skeleton-line short" style="margin-bottom:20px;"></div>
+        <div class="skeleton-line medium" style="height:28px;margin-bottom:16px;"></div>
+        <div class="skeleton-row" style="margin-bottom:20px;border-radius:6px;border:1px solid var(--border-default);">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-body">
+                <div class="skeleton-line medium"></div>
+                <div class="skeleton-line short"></div>
+            </div>
+        </div>
+    </div>
+}
+else if (book is null)
 {
     <PageTitle>Book not found - Free Library</PageTitle>
     <div class="not-found-card">
@@ -86,8 +101,23 @@ else
     [Parameter] public int Id { get; set; }
     private Book? book;
 
-    protected override void OnInitialized() => Books.StatsChanged += OnStats;
+    protected override void OnInitialized()
+    {
+        Books.StatsChanged += OnUpdate;
+        Books.LoadedChanged += OnUpdate;
+    }
+
     protected override void OnParametersSet() => book = Books.GetById(Id);
-    private void OnStats() => InvokeAsync(StateHasChanged);
-    public void Dispose() => Books.StatsChanged -= OnStats;
+
+    private void OnUpdate()
+    {
+        book = Books.GetById(Id);
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Books.StatsChanged -= OnUpdate;
+        Books.LoadedChanged -= OnUpdate;
+    }
 }

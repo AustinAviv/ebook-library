@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.JSInterop;
 using WikiLibrary.Models;
 
 namespace WikiLibrary.Services;
@@ -9,6 +11,7 @@ public class BookService
     private const int MaxQueryCacheSize = 64;
 
     private readonly HttpClient _http;
+    private readonly IJSRuntime _js;
     private Dictionary<int, Book> _byId = new();
     private List<Book> _sorted = new();
     private Dictionary<int, int> _downloads = new();
@@ -19,7 +22,11 @@ public class BookService
     private readonly Dictionary<string, IReadOnlyList<Book>> _searchCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly LinkedList<string> _cacheLruOrder = new();
 
-    public BookService(HttpClient http) => _http = http;
+    public BookService(HttpClient http, IJSRuntime js)
+    {
+        _http = http;
+        _js = js;
+    }
 
     public bool IsLoaded { get; private set; }
     public string? LoadError { get; private set; }
@@ -28,35 +35,61 @@ public class BookService
     public IReadOnlyList<(string Name, int Count)> Categories { get; private set; } = new List<(string, int)>();
 
     public event Action? StatsChanged;
+    public event Action? LoadedChanged;
+
+    public async Task EnsureLoadedAsync()
+    {
+        if (IsLoaded) return;
+        await LoadAsync();
+    }
+
+    public async Task RetryAsync()
+    {
+        LoadError = null;
+        IsLoaded = false;
+        LoadedChanged?.Invoke();
+        await LoadAsync();
+    }
 
     public async Task LoadAsync()
     {
-        if (IsLoaded) return;
+        try
+        {
+            var cachedJson = await _js.InvokeAsync<string?>("loadCatalogCache");
+            if (!string.IsNullOrWhiteSpace(cachedJson))
+            {
+                var cachedBooks = JsonSerializer.Deserialize<List<Book>>(cachedJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (cachedBooks != null && cachedBooks.Count > 0)
+                {
+                    ApplyBooks(cachedBooks);
+                    IsLoaded = true;
+                    LoadError = null;
+                    LoadedChanged?.Invoke();
+                }
+            }
+        }
+        catch { }
 
         Exception? lastError = null;
         for (int attempt = 0; attempt < 2; attempt++)
         {
             try
             {
-                var books = await _http.GetFromJsonAsync<List<Book>>("data/books.json") ?? new();
+                var rawJson = await _http.GetStringAsync("data/books.json");
+                var books = JsonSerializer.Deserialize<List<Book>>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
 
-                var validBooks = books.Where(b => b.Id > 0 && !string.IsNullOrWhiteSpace(b.Title)).ToList();
-
-                _byId = validBooks.ToDictionary(b => b.Id);
-                _sorted = validBooks.OrderBy(b => b.Title, StringComparer.OrdinalIgnoreCase).ToList();
-
-                BuildLetterBuckets(_sorted);
-                BuildInvertedIndex(_sorted);
-
-                Categories = validBooks
-                    .Where(b => b.HasCategory)
-                    .GroupBy(b => b.Category!)
-                    .Select(g => (Name: g.Key, Count: g.Count()))
-                    .OrderByDescending(c => c.Count).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                ApplyBooks(books);
 
                 IsLoaded = true;
                 LoadError = null;
+                LoadedChanged?.Invoke();
+
+                try
+                {
+                    await _js.InvokeVoidAsync("saveCatalogCache", rawJson);
+                }
+                catch { }
+
                 return;
             }
             catch (Exception ex)
@@ -66,7 +99,29 @@ public class BookService
             }
         }
 
-        LoadError = lastError?.Message ?? "Unable to load library catalogue.";
+        if (!IsLoaded)
+        {
+            LoadError = lastError?.Message ?? "Unable to load library catalogue.";
+            LoadedChanged?.Invoke();
+        }
+    }
+
+    private void ApplyBooks(List<Book> books)
+    {
+        var validBooks = books.Where(b => b.Id > 0 && !string.IsNullOrWhiteSpace(b.Title)).ToList();
+
+        _byId = validBooks.ToDictionary(b => b.Id);
+        _sorted = validBooks.OrderBy(b => b.Title, StringComparer.OrdinalIgnoreCase).ToList();
+
+        BuildLetterBuckets(_sorted);
+        BuildInvertedIndex(_sorted);
+
+        Categories = validBooks
+            .Where(b => b.HasCategory)
+            .GroupBy(b => b.Category!)
+            .Select(g => (Name: g.Key, Count: g.Count()))
+            .OrderByDescending(c => c.Count).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private void BuildLetterBuckets(List<Book> books)

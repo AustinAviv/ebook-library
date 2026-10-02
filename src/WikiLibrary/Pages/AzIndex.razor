@@ -1,4 +1,5 @@
 @page "/a-z"
+@implements IDisposable
 @inject BookService Books
 
 <PageTitle>All books (A-Z) - Free Library</PageTitle>
@@ -13,10 +14,29 @@
     }
 </nav>
 
-<p class="muted count-info">Showing @total.ToString("N0") book(s)@(string.IsNullOrEmpty(Letter) ? "" : $" starting with \"{Letter}\"").</p>
-
-<BookList Books="pageItems" />
-<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+@if (!Books.IsLoaded && Books.LoadError is null)
+{
+    <p class="muted count-info">Loading catalogue...</p>
+    <div class="book-list-container">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="skeleton-row">
+                <div class="skeleton-icon"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+                <div class="skeleton-btn"></div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="muted count-info">Showing @total.ToString("N0") book(s)@(string.IsNullOrEmpty(Letter) ? "" : $" starting with \"{Letter}\"").</p>
+    <BookList Books="pageItems" />
+    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+}
 
 @code {
     [Parameter, SupplyParameterFromQuery(Name = "letter")] public string? Letter { get; set; }
@@ -28,10 +48,31 @@
     private int total;
     private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
 
+    protected override void OnInitialized()
+    {
+        Books.LoadedChanged += OnLoaded;
+    }
+
+    private void OnLoaded()
+    {
+        UpdateList();
+        InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnParametersSet()
+    {
+        UpdateList();
+    }
+
+    private void UpdateList()
     {
         var list = Books.ByLetter(Letter?.ToUpperInvariant());
         total = list.Count;
         pageItems = BookService.Page(list, PageNo ?? 1);
+    }
+
+    public void Dispose()
+    {
+        Books.LoadedChanged -= OnLoaded;
     }
 }

@@ -15,6 +15,10 @@ switch (cmd)
         await AddBooksAsync(args.Skip(1).ToArray());
         break;
 
+    case "build-site":
+        BuildSite();
+        break;
+
     case "copy-site":
         CopySite();
         break;
@@ -263,6 +267,26 @@ static async Task AddBooksAsync(string[] args)
     Console.WriteLine("  2. dotnet publish src/WikiLibrary -c Release -o .publish");
     Console.WriteLine("  3. dotnet run --project tools/LibraryTool -- copy-site");
     Console.WriteLine("  4. vercel build --prod && vercel deploy --prebuilt --prod");
+}
+
+static void BuildSite()
+{
+    if (Directory.Exists(".publish"))
+        Directory.Delete(".publish", recursive: true);
+
+    var psi = new System.Diagnostics.ProcessStartInfo("dotnet", "publish src/WikiLibrary -c Release -o .publish")
+    {
+        RedirectStandardOutput = false,
+        RedirectStandardError = false,
+        UseShellExecute = false
+    };
+    using var proc = System.Diagnostics.Process.Start(psi)
+        ?? throw new InvalidOperationException("Failed to start dotnet publish");
+    proc.WaitForExit();
+    if (proc.ExitCode != 0)
+        throw new InvalidOperationException($"dotnet publish failed with exit code {proc.ExitCode}");
+
+    CopySite();
 }
 
 static void CopySite()

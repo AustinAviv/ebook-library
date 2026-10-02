@@ -1,15 +1,50 @@
 @page "/categories"
+@implements IDisposable
 @inject BookService Books
 
 <PageTitle>Categories - Free Library</PageTitle>
 <h1 class="firstHeading">Categories</h1>
-<p class="muted">@Books.Categories.Count categories in the collection.</p>
-<ul class="columns">
-    @foreach (var c in Books.Categories.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase))
+
+@if (!Books.IsLoaded && Books.LoadError is null)
+{
+    <p class="muted">Loading categories...</p>
+    <div class="book-list-container">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="skeleton-row">
+                <div class="skeleton-icon"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="muted">@Books.Categories.Count categories in the collection.</p>
+    <ul class="columns">
+        @foreach (var c in Books.Categories.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            <li>
+                <a href="/category/@Uri.EscapeDataString(c.Name)">@c.Name</a>
+                <span class="muted">(@c.Count)</span>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    protected override void OnInitialized()
     {
-        <li>
-            <a href="/category/@Uri.EscapeDataString(c.Name)">@c.Name</a>
-            <span class="muted">(@c.Count)</span>
-        </li>
+        Books.LoadedChanged += OnLoaded;
     }
-</ul>
+
+    private void OnLoaded() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Books.LoadedChanged -= OnLoaded;
+    }
+}

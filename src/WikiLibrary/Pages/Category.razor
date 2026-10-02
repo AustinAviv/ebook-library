@@ -1,15 +1,37 @@
 @page "/category/{Name}"
+@implements IDisposable
 @inject BookService Books
 
 <PageTitle>Category: @Name - Free Library</PageTitle>
 <h1 class="page-title">@Name</h1>
-<p class="muted count-info">
-    @total.ToString("N0") book@(total == 1 ? "" : "s") in this category.
-    <a href="/categories" style="margin-left:.75em;color:var(--link-color)">← All categories</a>
-</p>
 
-<BookList Books="pageItems" />
-<Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+@if (!Books.IsLoaded && Books.LoadError is null)
+{
+    <p class="muted count-info">Loading books in category...</p>
+    <div class="book-list-container">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="skeleton-row">
+                <div class="skeleton-icon"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+                <div class="skeleton-btn"></div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="muted count-info">
+        @total.ToString("N0") book@(total == 1 ? "" : "s") in this category.
+        <a href="/categories" style="margin-left:.75em;color:var(--link-color)">← All categories</a>
+    </p>
+
+    <BookList Books="pageItems" />
+    <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
+}
 
 @code {
     [Parameter] public string Name { get; set; } = "";
@@ -18,10 +40,31 @@
     private int total;
     private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
 
+    protected override void OnInitialized()
+    {
+        Books.LoadedChanged += OnLoaded;
+    }
+
+    private void OnLoaded()
+    {
+        UpdateCategory();
+        InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnParametersSet()
+    {
+        UpdateCategory();
+    }
+
+    private void UpdateCategory()
     {
         var list = Books.InCategory(Name);
         total = list.Count;
         pageItems = BookService.Page(list, PageNo ?? 1);
+    }
+
+    public void Dispose()
+    {
+        Books.LoadedChanged -= OnLoaded;
     }
 }
