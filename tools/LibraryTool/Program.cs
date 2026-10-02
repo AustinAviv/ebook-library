@@ -55,7 +55,8 @@ static async Task AddBooksAsync(string[] args)
 {
     const string BooksJson   = "src/WikiLibrary/wwwroot/data/books.json";
     const string CatalogJson = "api/_catalog.json";
-    const int    Concurrency = 4;
+    const int    Concurrency = 1;
+    const string PublicBlobBase = "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com";
 
     var folder = args.FirstOrDefault(a => !a.StartsWith('-')) ?? "./pdfs";
     var force  = args.Contains("--force");
@@ -128,7 +129,7 @@ static async Task AddBooksAsync(string[] args)
         http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
         http.DefaultRequestHeaders.TryAddWithoutValidation("x-api-version",        "7");
-        http.DefaultRequestHeaders.TryAddWithoutValidation("x-vercel-blob-access",  "private");
+        http.DefaultRequestHeaders.TryAddWithoutValidation("x-vercel-blob-access",  "public");
         http.DefaultRequestHeaders.TryAddWithoutValidation("x-add-random-suffix",  "0");
         http.DefaultRequestHeaders.TryAddWithoutValidation("x-allow-overwrite",    "1");
         http.DefaultRequestHeaders.TryAddWithoutValidation("x-content-type",       "application/pdf");
@@ -146,27 +147,73 @@ static async Task AddBooksAsync(string[] args)
         await sem.WaitAsync();
         try
         {
-            if (existingEntry is null || force)
+            string? downloadUrl = null;
+            string? publicUrl   = null;
+
+            var encodedPath = string.Join("/",
+                pathname.Split('/').Select(Uri.EscapeDataString));
+            var publicCheckUrl = $"{PublicBlobBase}/{encodedPath}";
+
+            bool alreadyInPublic = false;
+            if (!force)
             {
-                // Encode path segments but keep forward slashes
-                var encodedPath = string.Join("/",
-                    pathname.Split('/').Select(Uri.EscapeDataString));
-                var url = $"https://blob.vercel-storage.com/{encodedPath}";
-
-                await using var fs = File.OpenRead(file);
-                using var content  = new StreamContent(fs);
-                content.Headers.ContentType =
-                    new MediaTypeHeaderValue("application/pdf");
-
-                using var request = new HttpRequestMessage(HttpMethod.Put, url)
-                    { Content = content };
-
-                var response = await http.SendAsync(request);
-                if (!response.IsSuccessStatusCode)
+                try
                 {
-                    var body = await response.Content.ReadAsStringAsync();
-                    throw new HttpRequestException(
-                        $"Upload failed for {pathname}: {response.StatusCode}\n{body}");
+                    using var headReq = new HttpRequestMessage(HttpMethod.Head, publicCheckUrl);
+                    using var headRes = await http.SendAsync(headReq);
+                    if (headRes.IsSuccessStatusCode)
+                    {
+                        alreadyInPublic = true;
+                        publicUrl   = publicCheckUrl;
+                        downloadUrl = $"{publicCheckUrl}?download=1";
+                    }
+                }
+                catch { }
+            }
+
+            if (!alreadyInPublic)
+            {
+                const int maxRetries = 3;
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                {
+                    try
+                    {
+                        var url = $"https://blob.vercel-storage.com/{encodedPath}";
+
+                        await using var fs = File.OpenRead(file);
+                        using var content  = new StreamContent(fs);
+                        content.Headers.ContentType =
+                            new MediaTypeHeaderValue("application/pdf");
+
+                        using var request = new HttpRequestMessage(HttpMethod.Put, url)
+                            { Content = content };
+
+                        var response = await http.SendAsync(request);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            var body = await response.Content.ReadAsStringAsync();
+                            throw new HttpRequestException(
+                                $"Upload failed for {pathname}: {response.StatusCode}\n{body}");
+                        }
+
+                        var resBody = await response.Content.ReadAsStringAsync();
+                        try
+                        {
+                            var jsonRes = JsonNode.Parse(resBody);
+                            publicUrl   = jsonRes?["url"]?.GetValue<string>();
+                            downloadUrl = jsonRes?["downloadUrl"]?.GetValue<string>();
+                        }
+                        catch { }
+
+                        publicUrl   ??= publicCheckUrl;
+                        downloadUrl ??= $"{publicCheckUrl}?download=1";
+                        break;
+                    }
+                    catch (Exception ex) when (attempt < maxRetries)
+                    {
+                        Console.WriteLine($"  [retry {attempt}/{maxRetries}] {pathname}: {ex.Message}");
+                        await Task.Delay(TimeSpan.FromSeconds(attempt * 2));
+                    }
                 }
             }
 
@@ -180,6 +227,11 @@ static async Task AddBooksAsync(string[] args)
                 ["fileSize"]    = fileInfo.Length,
                 ["blobPathname"]= pathname,
             };
+
+            if (!string.IsNullOrWhiteSpace(downloadUrl))
+                book["downloadUrl"] = downloadUrl;
+            if (!string.IsNullOrWhiteSpace(publicUrl))
+                book["url"] = publicUrl;
 
             var existingAuthor = existingEntry?["author"]?.GetValue<string>();
             if (!string.IsNullOrWhiteSpace(existingAuthor) && !existingAuthor.Equals("Unknown author", StringComparison.OrdinalIgnoreCase))
@@ -214,8 +266,11 @@ static async Task AddBooksAsync(string[] args)
 
     var catalog = new JsonObject();
     foreach (var b in sorted)
-        catalog[b["id"]!.GetValue<int>().ToString()] =
-            b["blobPathname"]!.GetValue<string>();
+    {
+        var idStr = b["id"]!.GetValue<int>().ToString();
+        var dl = b["downloadUrl"]?.GetValue<string>() ?? b["url"]?.GetValue<string>();
+        catalog[idStr] = !string.IsNullOrWhiteSpace(dl) ? dl : b["blobPathname"]!.GetValue<string>();
+    }
     await File.WriteAllTextAsync(CatalogJson,
         JsonSerializer.Serialize(catalog, writeOptions));
 

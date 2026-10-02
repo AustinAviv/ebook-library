@@ -3,48 +3,64 @@
     "id": 9,
     "title": "Operating Systems: Three Easy Pieces",
     "fileSize": 5960838,
-    "blobPathname": "books/dokumen-pub-operating-systems-three-easy-pieces-110nbsped.pdf"
+    "blobPathname": "books/dokumen-pub-operating-systems-three-easy-pieces-110nbsped.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/dokumen-pub-operating-systems-three-easy-pieces-110nbsped.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/dokumen-pub-operating-systems-three-easy-pieces-110nbsped.pdf"
   },
   {
     "id": 10,
     "title": "Python Crash Course",
     "fileSize": 6198812,
-    "blobPathname": "books/python-crash-course.pdf"
+    "blobPathname": "books/python-crash-course.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/python-crash-course.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/python-crash-course.pdf"
   },
   {
     "id": 11,
     "title": "Think Python (2nd Edition)",
     "fileSize": 921415,
-    "blobPathname": "books/thinkpython2.pdf"
+    "blobPathname": "books/thinkpython2.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/thinkpython2.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/thinkpython2.pdf"
   },
   {
     "id": 12,
     "title": "Data Structures and Algorithms",
     "fileSize": 21337334,
-    "blobPathname": "books/data-structures-and-algorithms-adam-drozdek.pdf"
+    "blobPathname": "books/data-structures-and-algorithms-adam-drozdek.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/data-structures-and-algorithms-adam-drozdek.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/data-structures-and-algorithms-adam-drozdek.pdf"
   },
   {
     "id": 13,
     "title": "The Ultimate Python Handbook",
     "fileSize": 53738617,
-    "blobPathname": "books/the-ultimate-python-handbook.pdf"
+    "blobPathname": "books/the-ultimate-python-handbook.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-ultimate-python-handbook.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-ultimate-python-handbook.pdf"
   },
   {
     "id": 14,
     "title": "Elements of Kotlin",
     "fileSize": 1921689,
-    "blobPathname": "books/elements-of-kotlin.pdf"
+    "blobPathname": "books/elements-of-kotlin.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/elements-of-kotlin.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/elements-of-kotlin.pdf"
   },
   {
     "id": 15,
     "title": "TypeScript Notes for Professionals",
     "fileSize": 1167336,
-    "blobPathname": "books/typescript-notes-for-professionals.pdf"
+    "blobPathname": "books/typescript-notes-for-professionals.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/typescript-notes-for-professionals.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/typescript-notes-for-professionals.pdf"
   },
   {
     "id": 16,
     "title": "An Introduction to the C Programming Language and Software Design",
     "fileSize": 913833,
-    "blobPathname": "books/an-introduction-to-the-c-programming-language-and-software-design.pdf"
+    "blobPathname": "books/an-introduction-to-the-c-programming-language-and-software-design.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/an-introduction-to-the-c-programming-language-and-software-design.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/an-introduction-to-the-c-programming-language-and-software-design.pdf"
   }
 ]
