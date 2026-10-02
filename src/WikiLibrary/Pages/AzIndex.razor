@@ -5,14 +5,15 @@
 <h1 class="firstHeading">All books (A–Z)</h1>
 
 <p class="letters">
-    <a href="/a-z">All</a>
+    <a href="/a-z" class="@(string.IsNullOrEmpty(Letter) ? "active" : "")">All</a>
     @foreach (var l in Letters)
     {
-        <span> · </span><a href="/a-z?letter=@Uri.EscapeDataString(l)">@l</a>
+        <a href="/a-z?letter=@Uri.EscapeDataString(l)"
+           class="@(Letter?.ToUpperInvariant() == l ? "active" : "")">@l</a>
     }
 </p>
 
-<p>Showing @total.ToString("N0") book(s)@(string.IsNullOrEmpty(Letter) ? "" : $" starting with “{Letter}”").</p>
+<p class="muted">Showing @total.ToString("N0") book(s)@(string.IsNullOrEmpty(Letter) ? "" : $" starting with \"{Letter}\"").</p>
 
 <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
 <BookList Books="pageItems" />

@@ -6,11 +6,13 @@
 
 @if (string.IsNullOrWhiteSpace(Query))
 {
-    <p>Type something in the search box above.</p>
+    <p class="muted">Type something in the search box above to find books.</p>
 }
 else
 {
-    <p>@total.ToString("N0") result(s) for “<b>@Query</b>”.</p>
+    <p class="muted">
+        @total.ToString("N0") result(s) for "<strong style="color:var(--ink)">@Query</strong>".
+    </p>
     <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />
     <BookList Books="pageItems" />
     <Pager TotalItems="total" CurrentPage="Math.Max(PageNo ?? 1, 1)" />

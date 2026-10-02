@@ -1,15 +1,28 @@
 @inject NavigationManager Nav
-@* "← Previous 1 2 [3] 4 Next →" - links keep the other query parameters (e.g. ?q= or ?letter=). *@
+@* "← Previous 1 2 [3] 4 Next →" — links keep existing query parameters (e.g. ?q= or ?letter=). *@
 @if (TotalPages > 1)
 {
     <div class="pager">
-        @if (CurrentPage > 1) { <a href="@Link(CurrentPage - 1)">← Previous</a> }
+        @if (CurrentPage > 1)
+        {
+            <a href="@Link(CurrentPage - 1)" aria-label="Previous page">← Prev</a>
+        }
         @foreach (var p in Window())
         {
-            @if (p == CurrentPage) { <strong>@p</strong> } else { <a href="@Link(p)">@p</a> }
+            @if (p == CurrentPage)
+            {
+                <strong aria-current="page">@p</strong>
+            }
+            else
+            {
+                <a href="@Link(p)">@p</a>
+            }
         }
-        @if (CurrentPage < TotalPages) { <a href="@Link(CurrentPage + 1)">Next →</a> }
-        <span class="muted">(@TotalItems.ToString("N0") items)</span>
+        @if (CurrentPage < TotalPages)
+        {
+            <a href="@Link(CurrentPage + 1)" aria-label="Next page">Next →</a>
+        }
+        <span class="muted">@TotalItems.ToString("N0") items</span>
     </div>
 }
 
@@ -23,7 +36,7 @@
     private string Link(int page) =>
         Nav.GetUriWithQueryParameter("page", page == 1 ? (int?)null : page);
 
-    // Show at most 9 page numbers around the current page.
+    // Show at most 9 page numbers centred on the current page.
     private IEnumerable<int> Window()
     {
         int start = Math.Max(1, CurrentPage - 4);

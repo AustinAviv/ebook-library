@@ -6,26 +6,34 @@
 
 @if (Books.LoadError is not null)
 {
-    <p>The library could not be loaded: @Books.LoadError</p>
+    <div style="margin-top:1em;padding:1em 1.5em;background:#fdf2f5;border:1px solid #e0b0bc;border-radius:8px;color:#7c1f3a;">
+        ⚠️ The library could not be loaded: @Books.LoadError
+    </div>
 }
 else
 {
-    <p>
-        <b>Free Library</b> is a collection of <b>@Books.Count.ToString("N0")</b> PDF books that anyone can
-        browse, search and download for free — no account, no login. Use the search box above,
-        pick a category below, or look through the <a href="/a-z">alphabetical index</a>.
-    </p>
+    <div class="hero-block">
+        <p>
+            <strong>Free Library</strong> is a collection of <strong>@Books.Count.ToString("N0") PDF books</strong> that anyone
+            can browse, search and download — <strong>no account, no login required</strong>.
+            Use the search box above, pick a category, or browse the
+            <a href="/a-z">alphabetical index</a>.
+        </p>
+    </div>
 
     <h2>Featured categories</h2>
-    <ul class="columns">
+    <div class="cat-grid">
         @foreach (var c in Books.Categories.Take(9))
         {
-            <li><a href="/category/@Uri.EscapeDataString(c.Name)">@c.Name</a> <span class="muted">(@c.Count)</span></li>
+            <a class="cat-card" href="/category/@Uri.EscapeDataString(c.Name)">
+                <span class="cat-card-name">@c.Name</span>
+                <span class="cat-card-count">@c.Count book@(c.Count == 1 ? "" : "s")</span>
+            </a>
         }
-    </ul>
-    <p><a href="/categories">All categories →</a></p>
+    </div>
+    <p><a class="see-all" href="/categories">All @Books.Categories.Count categories</a></p>
 
     <h2>Recently added books</h2>
     <BookList Books="Books.Newest(20)" />
-    <p><a href="/a-z">Browse all books →</a></p>
+    <p><a class="see-all" href="/a-z">Browse all books</a></p>
 }

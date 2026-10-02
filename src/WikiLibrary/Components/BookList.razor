@@ -1,22 +1,27 @@
-@* A plain table of books, reused by every list page. *@
+@* A styled table of books, reused by every list page. *@
 @if (Books.Count == 0)
 {
-    <p><em>No books found.</em></p>
+    <p style="color:var(--muted);font-style:italic;padding:1em 0">No books found.</p>
 }
 else
 {
     <table class="wikitable">
         <thead>
-            <tr><th>Title</th><th>Author</th><th>Category</th><th>Year</th></tr>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Year</th>
+            </tr>
         </thead>
         <tbody>
             @foreach (var b in Books)
             {
                 <tr>
                     <td><a href="/book/@b.Id">@b.Title</a></td>
-                    <td>@b.Author</td>
-                    <td><a href="/category/@Uri.EscapeDataString(b.Category)">@b.Category</a></td>
-                    <td>@b.YearText</td>
+                    <td style="color:var(--ink-soft)">@b.Author</td>
+                    <td><a href="/category/@Uri.EscapeDataString(b.Category)" style="color:var(--forest)">@b.Category</a></td>
+                    <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">@b.YearText</td>
                 </tr>
             }
         </tbody>

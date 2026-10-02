@@ -3,11 +3,11 @@
 
 <header class="topbar">
     <a class="brand" href="/">
-        <img src="logo.svg" alt="" width="36" height="36" />
+        <img src="logo.svg" alt="Free Library" width="36" height="36" />
         <span>Free Library</span>
     </a>
     <form class="searchbox" @onsubmit="Submit" @onsubmit:preventDefault>
-        <input type="search" placeholder="Search books, authors, categories"
+        <input type="search" placeholder="Search books, authors, categories…"
                aria-label="Search" @bind="query" @bind:event="oninput" />
         <button type="submit">Search</button>
     </form>
@@ -15,13 +15,13 @@
 
 <div class="page">
     <nav class="sidebar" aria-label="Navigation">
-        <h3>Navigation</h3>
+        <h3>Navigate</h3>
         <ul>
-            <li><a href="/">Main page</a></li>
-            <li><a href="/random">Random book</a></li>
-            <li><a href="/categories">Categories</a></li>
-            <li><a href="/a-z">All books (A–Z)</a></li>
-            <li><a href="/about">About</a></li>
+            <li><a href="/">📖 Main page</a></li>
+            <li><a href="/random">🎲 Random book</a></li>
+            <li><a href="/categories">🗂 Categories</a></li>
+            <li><a href="/a-z">🔤 All books (A–Z)</a></li>
+            <li><a href="/about">ℹ️ About</a></li>
         </ul>
     </nav>
 
@@ -31,8 +31,8 @@
 </div>
 
 <footer class="footer">
-    <p>Free Library is a free, no-login collection of PDF books. Files are provided as-is.</p>
-    <p>Styled after Wikipedia for readability; not affiliated with Wikipedia or the Wikimedia Foundation.</p>
+    <p>Free Library — a free, no-login collection of PDF books. Files are provided as-is.</p>
+    <p>Styled for readability; not affiliated with Wikipedia or the Wikimedia Foundation.</p>
 </footer>
 
 @code {

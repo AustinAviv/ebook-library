@@ -33,10 +33,10 @@ else
     <h2>Download</h2>
     @* The "download" attribute stops Blazor from treating this as an in-app route,
        so the browser really requests /api/download (which redirects to the PDF). *@
-    <p class="download-box">
+    <div class="download-box">
         <a class="download-link" href="/api/download?id=@book.Id" download>Download PDF</a>
-        <span class="muted">(@book.FileSizeText, free, no login)</span>
-    </p>
+        <span class="muted">@book.FileSizeText — free, no login required</span>
+    </div>
 }
 
 @code {
