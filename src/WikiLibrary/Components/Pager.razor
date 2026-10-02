@@ -1,5 +1,5 @@
 @inject NavigationManager Nav
-@* "← Previous 1 2 [3] 4 Next →" — links keep existing query parameters (e.g. ?q= or ?letter=). *@
+
 @if (TotalPages > 1)
 {
     <div class="pager">
@@ -36,7 +36,6 @@
     private string Link(int page) =>
         Nav.GetUriWithQueryParameter("page", page == 1 ? (int?)null : page);
 
-    // Show at most 9 page numbers centred on the current page.
     private IEnumerable<int> Window()
     {
         int start = Math.Max(1, CurrentPage - 4);

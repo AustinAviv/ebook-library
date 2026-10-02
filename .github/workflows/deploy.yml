@@ -1,15 +1,3 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Free Library — CI/CD
-#
-# Trigger: any push to master
-# What it does automatically:
-#   1. Uploads any new PDFs in pdfs/ to Vercel Blob
-#   2. Rebuilds books.json (title = filename, no manual editing needed)
-#   3. Builds the Blazor WASM site
-#   4. Copies build output to public/
-#   5. Deploys to Vercel (production)
-# ─────────────────────────────────────────────────────────────────────────────
-
 name: Build & Deploy
 
 on:

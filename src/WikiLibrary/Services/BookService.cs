@@ -3,11 +3,6 @@ using WikiLibrary.Models;
 
 namespace WikiLibrary.Services;
 
-/// <summary>
-/// High-performance, resilient in-memory library engine.
-/// Utilizes an Inverted Index + Prefix Trie and LRU Query Cache for O(1)/O(K) search,
-/// and pre-computed A-Z letter hash buckets for instantaneous navigation.
-/// </summary>
 public class BookService
 {
     public const int PageSize = 50;
@@ -15,16 +10,12 @@ public class BookService
 
     private readonly HttpClient _http;
     private Dictionary<int, Book> _byId = new();
-    private List<Book> _sorted = new();               // All books sorted A-Z by title
-    private Dictionary<int, int> _downloads = new();  // Book ID -> Download count
+    private List<Book> _sorted = new();
+    private Dictionary<int, int> _downloads = new();
 
-    // DSA Optimization 1: O(1) Letter partition buckets (A-Z, #)
     private Dictionary<string, List<Book>> _byLetterBuckets = new(StringComparer.OrdinalIgnoreCase);
-
-    // DSA Optimization 2: Inverted Index for fast keyword lookups
     private Dictionary<string, HashSet<int>> _invertedIndex = new(StringComparer.OrdinalIgnoreCase);
 
-    // DSA Optimization 3: Bounded LRU Cache for user search queries
     private readonly Dictionary<string, IReadOnlyList<Book>> _searchCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly LinkedList<string> _cacheLruOrder = new();
 
@@ -36,16 +27,12 @@ public class BookService
     public int Count => _sorted.Count;
     public IReadOnlyList<(string Name, int Count)> Categories { get; private set; } = new List<(string, int)>();
 
-    /// <summary>Raised when download counts arrive from the stats API.</summary>
     public event Action? StatsChanged;
-
-    // ---------- Loading & Indexing ----------
 
     public async Task LoadAsync()
     {
         if (IsLoaded) return;
 
-        // Resilient loading with single retry on network failure
         Exception? lastError = null;
         for (int attempt = 0; attempt < 2; attempt++)
         {
@@ -53,16 +40,12 @@ public class BookService
             {
                 var books = await _http.GetFromJsonAsync<List<Book>>("data/books.json") ?? new();
 
-                // Sanitize and filter any invalid books
                 var validBooks = books.Where(b => b.Id > 0 && !string.IsNullOrWhiteSpace(b.Title)).ToList();
 
                 _byId = validBooks.ToDictionary(b => b.Id);
                 _sorted = validBooks.OrderBy(b => b.Title, StringComparer.OrdinalIgnoreCase).ToList();
 
-                // Build O(1) A-Z letter buckets
                 BuildLetterBuckets(_sorted);
-
-                // Build Inverted Index for O(K) search queries
                 BuildInvertedIndex(_sorted);
 
                 Categories = validBooks
@@ -120,7 +103,6 @@ public class BookService
                 var clean = token.ToLowerInvariant();
                 if (clean.Length < 2) continue;
 
-                // Index full token
                 if (!index.TryGetValue(clean, out var set))
                 {
                     set = new HashSet<int>();
@@ -128,7 +110,6 @@ public class BookService
                 }
                 set.Add(b.Id);
 
-                // Index prefixes up to 6 characters for instant prefix searching
                 for (int len = 2; len <= Math.Min(clean.Length, 6); len++)
                 {
                     var prefix = clean[..len];
@@ -155,10 +136,8 @@ public class BookService
                             .ToDictionary(kv => int.Parse(kv.Key), kv => kv.Value);
             StatsChanged?.Invoke();
         }
-        catch { /* Graceful degradation */ }
+        catch { }
     }
-
-    // ---------- High-Performance Queries ----------
 
     public Book? GetById(int id) => _byId.GetValueOrDefault(id);
 
@@ -178,22 +157,17 @@ public class BookService
         return char.IsAsciiLetter(first) ? char.ToUpperInvariant(first).ToString() : "#";
     }
 
-    /// <summary>O(1) letter lookup via precomputed hash buckets.</summary>
     public IReadOnlyList<Book> ByLetter(string? letter)
     {
         if (string.IsNullOrEmpty(letter)) return _sorted;
         return _byLetterBuckets.GetValueOrDefault(letter) ?? (IReadOnlyList<Book>)Array.Empty<Book>();
     }
 
-    /// <summary>
-    /// Fast O(K) Search with Inverted Index intersection, relevance scoring, and LRU Query Caching.
-    /// </summary>
     public IReadOnlyList<Book> Search(string query)
     {
         var cleanQuery = query.Trim();
         if (string.IsNullOrWhiteSpace(cleanQuery)) return Array.Empty<Book>();
 
-        // Check LRU Query Cache
         lock (_searchCache)
         {
             if (_searchCache.TryGetValue(cleanQuery, out var cachedResults))
@@ -207,7 +181,6 @@ public class BookService
         var terms = cleanQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (terms.Length == 0) return Array.Empty<Book>();
 
-        // Set intersection of candidate book IDs from Inverted Index
         HashSet<int>? candidateIds = null;
         foreach (var t in terms)
         {
@@ -221,7 +194,6 @@ public class BookService
             }
             else
             {
-                // Fallback to substring scan if prefix was not in index
                 var fallbackIds = _sorted
                     .Where(b => b.Title.Contains(t, StringComparison.OrdinalIgnoreCase) ||
                                 (b.Author != null && b.Author.Contains(t, StringComparison.OrdinalIgnoreCase)))
@@ -243,7 +215,6 @@ public class BookService
             .Select(x => x.Book)
             .ToList();
 
-        // Save to LRU cache
         lock (_searchCache)
         {
             if (_searchCache.Count >= MaxQueryCacheSize && _cacheLruOrder.First != null)

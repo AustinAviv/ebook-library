@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>WikiLibrary</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <!-- Vercel compresses static files itself, so skip the .br/.gz copies -->
     <CompressionEnabled>false</CompressionEnabled>
     <BlazorEnableCompression>false</BlazorEnableCompression>
   </PropertyGroup>

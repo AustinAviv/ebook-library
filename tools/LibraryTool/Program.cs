@@ -1,19 +1,8 @@
-// =============================================================================
-// Free Library — C# CLI tool
-// Replaces:  scripts/prepare-library.mjs  AND  scripts/copy-site.mjs
-//
-// Commands:
-//   dotnet run --project tools/LibraryTool -- add-books [folder] [--force]
-//   dotnet run --project tools/LibraryTool -- copy-site
-// =============================================================================
-
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
-// Resolve the repo root.
-// This binary lives in  tools/LibraryTool/bin/…  so we go up until we find package.json.
 var repoRoot = FindRepoRoot(AppContext.BaseDirectory)
     ?? throw new InvalidOperationException("Could not locate repo root (no package.json found).");
 Directory.SetCurrentDirectory(repoRoot);
@@ -32,25 +21,22 @@ switch (cmd)
 
     default:
         Console.WriteLine("""
-            Free Library — C# CLI tool
+            Free Library - C# CLI tool
             
             Usage:
               dotnet run --project tools/LibraryTool -- add-books [folder] [--force]
                   Upload every PDF in [folder] (default: ./pdfs) to Vercel Blob,
                   update books.json and api/_catalog.json.
-                  Re-running is safe — already-uploaded files are skipped.
+                  Re-running is safe: already-uploaded files are skipped.
                   Pass --force to re-upload everything.
             
               dotnet run --project tools/LibraryTool -- copy-site
-                  Copy .publish/wwwroot → public/ and patch the importmap in index.html.
+                  Copy .publish/wwwroot -> public/ and patch the importmap in index.html.
                   Run this after:  dotnet publish src/WikiLibrary -c Release -o .publish
             """);
         break;
 }
 
-// =============================================================================
-//  add-books
-// =============================================================================
 static async Task AddBooksAsync(string[] args)
 {
     const string BooksJson   = "src/WikiLibrary/wwwroot/data/books.json";
@@ -61,7 +47,6 @@ static async Task AddBooksAsync(string[] args)
     var folder = args.FirstOrDefault(a => !a.StartsWith('-')) ?? "./pdfs";
     var force  = args.Contains("--force");
 
-    // ── 1. Find PDFs ─────────────────────────────────────────────────────────
     if (!Directory.Exists(folder))
         throw new DirectoryNotFoundException($"Folder not found: {folder}");
 
@@ -73,7 +58,6 @@ static async Task AddBooksAsync(string[] args)
     Console.WriteLine($"Found {files.Count} PDF(s) in {folder}");
     if (files.Count == 0) return;
 
-    // ── 2. Load existing books.json ──────────────────────────────────────────
     var existing = new List<JsonObject>();
     if (File.Exists(BooksJson))
     {
@@ -93,7 +77,6 @@ static async Task AddBooksAsync(string[] args)
         ? existing.Max(b => b["id"]?.GetValue<int>() ?? 0) + 1
         : 1;
 
-    // ── 3. Assign blob pathnames & IDs (single-threaded, deterministic) ──────
     var used = new HashSet<string>(StringComparer.Ordinal);
     var jobs = files.Select(file =>
     {
@@ -110,7 +93,6 @@ static async Task AddBooksAsync(string[] args)
         return (file, pathname, id, existing: existingEntry);
     }).ToList();
 
-    // ── 4. Check token only if uploads are needed ────────────────────────────
     var token = GetEnvVar("BLOB_READ_WRITE_TOKEN");
     var needsUpload = jobs.Any(j => j.existing is null || force);
     if (needsUpload && string.IsNullOrWhiteSpace(token))
@@ -122,7 +104,6 @@ static async Task AddBooksAsync(string[] args)
             "https://github.com/AustinAviv/ebook-library/settings/secrets/actions");
     }
 
-    // ── 5. Upload with bounded concurrency ───────────────────────────────────
     using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
     if (!string.IsNullOrWhiteSpace(token))
     {
@@ -256,7 +237,6 @@ static async Task AddBooksAsync(string[] args)
 
     await Task.WhenAll(tasks);
 
-    // ── 6. Write books.json and api/_catalog.json ────────────────────────────
     var sorted = books.OrderBy(b => b["id"]?.GetValue<int>() ?? 0).ToList();
     var writeOptions = new JsonSerializerOptions { WriteIndented = true };
 
@@ -285,9 +265,6 @@ static async Task AddBooksAsync(string[] args)
     Console.WriteLine("  4. vercel build --prod && vercel deploy --prebuilt --prod");
 }
 
-// =============================================================================
-//  copy-site  (replaces scripts/copy-site.mjs)
-// =============================================================================
 static void CopySite()
 {
     const string PublishWwwRoot = ".publish/wwwroot";
@@ -298,7 +275,7 @@ static void CopySite()
             $"Publish output not found at {PublishWwwRoot}.\n" +
             "Run first:  dotnet publish src/WikiLibrary -c Release -o .publish");
 
-    Console.Write($"Copying {PublishWwwRoot} → {PublicDir}/ ... ");
+    Console.Write($"Copying {PublishWwwRoot} -> {PublicDir}/ ... ");
 
     if (Directory.Exists(PublicDir))
         Directory.Delete(PublicDir, recursive: true);
@@ -306,7 +283,6 @@ static void CopySite()
     CopyDirectory(PublishWwwRoot, PublicDir);
     Console.WriteLine("done.");
 
-    // Patch importmap in public/index.html
     var frameworkDir  = Path.Combine(PublicDir, "_framework");
     var allFramework  = Directory.EnumerateFiles(frameworkDir)
                                  .Select(Path.GetFileName)
@@ -330,7 +306,6 @@ static void CopySite()
             @"<script type=""importmap""></script>",
             $"""<script type="importmap">{importmap}</script>""");
 
-        // Also fix the blazor.webassembly.[fingerprint].js reference if present
         html = Regex.Replace(
             html,
             @"_framework/blazor\.webassembly#\[\.{fingerprint}\]\.js",
@@ -347,9 +322,6 @@ static void CopySite()
     Console.WriteLine("[OK] public/ ready for deployment.");
 }
 
-// =============================================================================
-//  Helpers
-// =============================================================================
 static void CopyDirectory(string src, string dst)
 {
     Directory.CreateDirectory(dst);
@@ -363,16 +335,9 @@ static string TitleFromFile(string file)
 {
     var name = Path.GetFileNameWithoutExtension(file);
 
-    // Strip common scraper prefixes like 'dokumen.pub_', 'libgen.li_', '[z-lib.org]', etc.
     name = Regex.Replace(name, @"^(dokumen\.pub_|libgen\.[a-z]+_|z-lib\.org_|\[.*?\]|\(.*?\))\s*", "", RegexOptions.IgnoreCase);
-
-    // Remove artifacts like '.110nbsped'
     name = Regex.Replace(name, @"[-_\.]+(110|nbsp|ed)\b", "", RegexOptions.IgnoreCase);
-
-    // Turn underscores, dashes, dots into spaces
     name = Regex.Replace(name, @"[_\-\.]+", " ");
-
-    // Collapse multiple spaces
     name = Regex.Replace(name, @"\s+", " ").Trim();
 
     if (name.Equals("thinkpython2", StringComparison.OrdinalIgnoreCase))
@@ -392,7 +357,6 @@ static string SlugifyFilename(string file)
 
 static string Slugify(string text)
 {
-    // Normalise, strip non-ASCII, lowercase, collapse whitespace → dashes
     var s = text
         .Normalize(System.Text.NormalizationForm.FormKD);
     s = Regex.Replace(s, @"[^\w\s-]", "").Trim().ToLowerInvariant();
@@ -402,11 +366,9 @@ static string Slugify(string text)
 
 static string? GetEnvVar(string name)
 {
-    // 1. Real environment variable (e.g. CI / shell export)
     var val = Environment.GetEnvironmentVariable(name);
     if (!string.IsNullOrWhiteSpace(val)) return val.Trim();
 
-    // 2. .env.local file (key=value, optional quotes)
     if (!File.Exists(".env.local")) return null;
 
     foreach (var line in File.ReadLines(".env.local"))

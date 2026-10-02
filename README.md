@@ -1,4 +1,4 @@
-# Free Library — Blazor WASM + Vercel (Blob + Upstash Redis)
+# Free Library - Blazor WASM + Vercel (Blob + Upstash Redis)
 
 A Wikipedia-style PDF library. Frontend: Blazor WebAssembly (.NET 10), pure C#. Backend: two small
 Vercel Functions (`api/download.js`, `api/stats.js`). PDFs live in a **private** Vercel Blob store.

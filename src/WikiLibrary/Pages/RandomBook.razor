@@ -2,10 +2,9 @@
 @inject BookService Books
 @inject NavigationManager Nav
 
-<p>Finding a random book…</p>
+<p>Finding a random book...</p>
 
 @code {
-    // Jump straight to a random book; "replace" keeps the Back button useful.
     protected override void OnInitialized()
     {
         var b = Books.RandomBook();

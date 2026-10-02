@@ -29,7 +29,6 @@
         <button class="theme-toggle-btn" @onclick="ToggleTheme" title="Toggle dark/light theme" aria-label="Toggle theme">
             @if (isDark)
             {
-                @* Sun icon for switching to light mode *@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="5"></circle>
                     <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -44,7 +43,6 @@
             }
             else
             {
-                @* Moon icon for switching to dark mode *@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
@@ -60,7 +58,7 @@
             <ul class="sidebar-menu">
                 <li><NavLink href="" Match="NavLinkMatch.All">Library</NavLink></li>
                 <li><NavLink href="random">Random Book</NavLink></li>
-                <li><NavLink href="a-z">All Books (A–Z)</NavLink></li>
+                <li><NavLink href="a-z">All Books (A-Z)</NavLink></li>
                 <li><NavLink href="about">About</NavLink></li>
             </ul>
         </div>
@@ -80,7 +78,7 @@
 </div>
 
 <footer class="footer">
-    <p>Free Library — Wikipedia-style digital archive for free PDF books. No account required.</p>
+    <p>Free Library - Wikipedia-style digital archive for free PDF books. No account required.</p>
 </footer>
 
 @code {
@@ -97,7 +95,7 @@
                 isDark = theme == "dark";
                 StateHasChanged();
             }
-            catch { /* Ignore during prerendering */ }
+            catch { }
         }
     }
 
@@ -108,7 +106,7 @@
             var nextTheme = await JS.InvokeAsync<string>("toggleTheme");
             isDark = nextTheme == "dark";
         }
-        catch { /* Fallback */ }
+        catch { }
     }
 
     private void Submit()
