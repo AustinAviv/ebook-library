@@ -310,5 +310,93 @@
     "blobPathname": "books/x86-64-assembly-language-programming-with-ubuntu.pdf",
     "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/x86-64-assembly-language-programming-with-ubuntu.pdf?download=1",
     "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/x86-64-assembly-language-programming-with-ubuntu.pdf"
+  },
+  {
+    "id": 48,
+    "title": "2013 Stroustrup The C Programming Language 4Th Edition",
+    "fileSize": 4413567,
+    "blobPathname": "books/2013-stroustrup-the-c-programming-language-4th-edition.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/2013-stroustrup-the-c-programming-language-4th-edition.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/2013-stroustrup-the-c-programming-language-4th-edition.pdf"
+  },
+  {
+    "id": 49,
+    "title": "Alan Beaulieu Learning Sql En",
+    "fileSize": 1902996,
+    "blobPathname": "books/alan-beaulieu-learning-sql-en.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/alan-beaulieu-learning-sql-en.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/alan-beaulieu-learning-sql-en.pdf"
+  },
+  {
+    "id": 50,
+    "title": "Cracking The Coding Interview 6Th Edition 1",
+    "fileSize": 56423124,
+    "blobPathname": "books/cracking-the-coding-interview-6th-edition-1.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/cracking-the-coding-interview-6th-edition-1.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/cracking-the-coding-interview-6th-edition-1.pdf"
+  },
+  {
+    "id": 51,
+    "title": "Data Structures And Algorithms Made Easy In Java Narasimha Karumanchi",
+    "fileSize": 37465109,
+    "blobPathname": "books/data-structures-and-algorithms-made-easy-in-java-narasimha-karumanchi.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/data-structures-and-algorithms-made-easy-in-java-narasimha-karumanchi.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/data-structures-and-algorithms-made-easy-in-java-narasimha-karumanchi.pdf"
+  },
+  {
+    "id": 52,
+    "title": "Elements Of Programming Interview Java",
+    "fileSize": 10639733,
+    "blobPathname": "books/elements-of-programming-interview-java.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/elements-of-programming-interview-java.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/elements-of-programming-interview-java.pdf"
+  },
+  {
+    "id": 53,
+    "title": "Operating System Concepts Wiley Global Education 2018 By Abraham Silberschatz 10Th Edition",
+    "fileSize": 15224702,
+    "blobPathname": "books/operating-system-concepts-wiley-global-education-2018-by-abraham-silberschatz-10th-edition.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/operating-system-concepts-wiley-global-education-2018-by-abraham-silberschatz-10th-edition.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/operating-system-concepts-wiley-global-education-2018-by-abraham-silberschatz-10th-edition.pdf"
+  },
+  {
+    "id": 54,
+    "title": "Practical Malware Analysis",
+    "fileSize": 10010878,
+    "blobPathname": "books/practical-malware-analysis.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/practical-malware-analysis.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/practical-malware-analysis.pdf"
+  },
+  {
+    "id": 55,
+    "title": "Reverse Engineering Code With Ida Pro",
+    "fileSize": 5129061,
+    "blobPathname": "books/reverse-engineering-code-with-ida-pro.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/reverse-engineering-code-with-ida-pro.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/reverse-engineering-code-with-ida-pro.pdf"
+  },
+  {
+    "id": 56,
+    "title": "The Island Of Doctor Moreau 1645716694 Print",
+    "fileSize": 994621,
+    "blobPathname": "books/the-island-of-doctor-moreau-1645716694-print.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-island-of-doctor-moreau-1645716694-print.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/the-island-of-doctor-moreau-1645716694-print.pdf"
+  },
+  {
+    "id": 57,
+    "title": "Wells 1922 Time Machine",
+    "fileSize": 3340298,
+    "blobPathname": "books/wells-1922-time-machine.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/wells-1922-time-machine.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/wells-1922-time-machine.pdf"
+  },
+  {
+    "id": 58,
+    "title": "Writing An Interpreter In Go",
+    "fileSize": 935701,
+    "blobPathname": "books/writing-an-interpreter-in-go.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/writing-an-interpreter-in-go.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/writing-an-interpreter-in-go.pdf"
   }
 ]
