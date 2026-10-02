@@ -25,7 +25,7 @@ switch (cmd)
 
     default:
         Console.WriteLine("""
-            Free Library - C# CLI tool
+            Aviv Library - C# CLI tool
             
             Usage:
               dotnet run --project tools/LibraryTool -- add-books [folder] [--force]

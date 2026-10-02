@@ -2,7 +2,7 @@
 @implements IDisposable
 @inject BookService Books
 
-<PageTitle>Free Library - Open Digital Archive</PageTitle>
+<PageTitle>Aviv Library - Open Digital Archive</PageTitle>
 
 @if (Books.LoadError is not null)
 {
@@ -13,7 +13,7 @@
 }
 else if (!Books.IsLoaded)
 {
-    <h1 class="firstHeading">Welcome to Free Library</h1>
+    <h1 class="firstHeading">Welcome to Aviv Library</h1>
     <p class="muted" style="margin-bottom:1.8em;font-size:1.05rem;line-height:1.7;">
         An open digital archive of free PDF books that anyone can read and download. Free forever, no registration, no tracking.
     </p>
@@ -26,7 +26,6 @@ else if (!Books.IsLoaded)
         @for (int i = 0; i < 4; i++)
         {
             <div class="skeleton-row">
-                <div class="skeleton-icon"></div>
                 <div class="skeleton-body">
                     <div class="skeleton-line medium"></div>
                     <div class="skeleton-line short"></div>
@@ -38,7 +37,7 @@ else if (!Books.IsLoaded)
 }
 else
 {
-    <h1 class="firstHeading">Welcome to Free Library</h1>
+    <h1 class="firstHeading">Welcome to Aviv Library</h1>
     <p class="muted" style="margin-bottom:1.8em;font-size:1.05rem;line-height:1.7;">
         An open digital archive of <strong>@Books.Count.ToString("N0") PDF books</strong> that anyone can read and download.
         Free forever, no registration, no tracking.
