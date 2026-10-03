@@ -6,7 +6,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
 });
 
-const RATE_LIMIT_MAX = 25;
+const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_SEC = 120;
 const PUBLIC_BLOB_BASE = 'https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com';
 const SUPABASE_URL = (process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
