@@ -293,6 +293,79 @@
         }
     };
 
+    window.supabaseGetSelectedFilesInfo = function (inputId) {
+        const inputEl = document.getElementById(inputId);
+        if (!inputEl || !inputEl.files || inputEl.files.length === 0) return JSON.stringify([]);
+        const list = [];
+        for (let i = 0; i < inputEl.files.length; i++) {
+            const file = inputEl.files[i];
+            let name = file.name || "book.pdf";
+            let clean = name.replace(/\.[^/.]+$/, "");
+            clean = clean.replace(/[_-]+/g, " ").trim();
+            list.push({
+                index: i,
+                fileName: file.name,
+                fileSize: file.size,
+                title: clean
+            });
+        }
+        return JSON.stringify(list);
+    };
+
+    window.supabaseUploadBookFileByIndex = async function (inputId, fileIndex, sanitizedFileName) {
+        const client = getClient();
+        if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
+
+        const inputEl = document.getElementById(inputId);
+        if (!inputEl || !inputEl.files || fileIndex >= inputEl.files.length) {
+            return JSON.stringify({ success: false, error: "File index out of range." });
+        }
+
+        const file = inputEl.files[fileIndex];
+        if (file.type && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+            return JSON.stringify({ success: false, error: "Selected file must be a PDF document (.pdf)." });
+        }
+
+        const maxBytes = 50 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            return JSON.stringify({ success: false, error: "File exceeds 50 MB maximum limit." });
+        }
+
+        const rawName = sanitizedFileName || file.name || "book.pdf";
+        const baseName = rawName.split(/[\\/]/).pop() || "book.pdf";
+        const cleanName = baseName
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]/g, "_");
+        const uniquePath = `uploads/${Date.now()}_${fileIndex}_${cleanName}`;
+
+        try {
+            const { data, error } = await client.storage
+                .from(STORAGE_BUCKET)
+                .upload(uniquePath, file, {
+                    cacheControl: "31536000",
+                    upsert: true,
+                    contentType: "application/pdf"
+                });
+
+            if (error) {
+                return JSON.stringify({ success: false, error: error.message });
+            }
+
+            const { data: publicData } = client.storage
+                .from(STORAGE_BUCKET)
+                .getPublicUrl(uniquePath);
+
+            return JSON.stringify({
+                success: true,
+                filePath: uniquePath,
+                publicUrl: publicData ? publicData.publicUrl : "",
+                fileSize: file.size
+            });
+        } catch (err) {
+            return JSON.stringify({ success: false, error: err.message || String(err) });
+        }
+    };
+
     window.supabaseDeleteBookFile = async function (filePath) {
         const client = getClient();
         if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });

@@ -76,3 +76,18 @@ public class SubmissionOperationResult
     [JsonPropertyName("submission")]
     public BookSubmission? Submission { get; set; }
 }
+
+public class UploadFileInfo
+{
+    [JsonPropertyName("index")]
+    public int Index { get; set; }
+
+    [JsonPropertyName("fileName")]
+    public string FileName { get; set; } = "";
+
+    [JsonPropertyName("fileSize")]
+    public long FileSize { get; set; }
+
+    [JsonPropertyName("title")]
+    public string Title { get; set; } = "";
+}

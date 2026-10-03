@@ -149,6 +149,34 @@ public class SupabaseService
         }
     }
 
+    public async Task<List<UploadFileInfo>> GetSelectedFilesInfoAsync(string inputElementId)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseGetSelectedFilesInfo", inputElementId);
+            return JsonSerializer.Deserialize<List<UploadFileInfo>>(raw, JsonOptions) ?? new List<UploadFileInfo>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] GetSelectedFilesInfo error: {ex.Message}");
+            return new List<UploadFileInfo>();
+        }
+    }
+
+    public async Task<FileUploadResult> UploadBookFileByIndexAsync(string inputElementId, int fileIndex, string sanitizedFileName)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseUploadBookFileByIndex", inputElementId, fileIndex, sanitizedFileName);
+            var result = JsonSerializer.Deserialize<FileUploadResult>(raw, JsonOptions);
+            return result ?? new FileUploadResult { Success = false, Error = "Upload response parsing failed" };
+        }
+        catch (Exception ex)
+        {
+            return new FileUploadResult { Success = false, Error = ex.Message };
+        }
+    }
+
     public async Task<SubmissionOperationResult> CreateSubmissionAsync(BookSubmission submission)
     {
         try
