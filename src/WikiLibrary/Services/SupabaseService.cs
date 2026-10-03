@@ -208,17 +208,33 @@ public class SupabaseService
         }
     }
 
-    public async Task<SubmissionOperationResult> UpdateSubmissionStatusAsync(long id, string status, string? rejectionReason = null)
+    public async Task<SubmissionOperationResult> UpdateSubmissionStatusAsync(long id, string status, string? rejectionReason = null, string? filePath = null)
     {
         try
         {
-            var raw = await _js.InvokeAsync<string>("supabaseUpdateSubmissionStatus", id, status, rejectionReason);
+            var raw = await _js.InvokeAsync<string>("supabaseUpdateSubmissionStatus", id, status, rejectionReason, filePath);
             var result = JsonSerializer.Deserialize<SubmissionOperationResult>(raw, JsonOptions);
             return result ?? new SubmissionOperationResult { Success = false, Error = "Failed to parse update response" };
         }
         catch (Exception ex)
         {
             return new SubmissionOperationResult { Success = false, Error = ex.Message };
+        }
+    }
+
+    public async Task<bool> DeleteBookFileAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath)) return true;
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseDeleteBookFile", filePath);
+            var result = JsonSerializer.Deserialize<SubmissionOperationResult>(raw, JsonOptions);
+            return result?.Success ?? false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] DeleteBookFile error: {ex.Message}");
+            return false;
         }
     }
 

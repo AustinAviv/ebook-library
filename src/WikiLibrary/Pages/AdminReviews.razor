@@ -189,15 +189,24 @@
 
                         <!-- Action Toolbar -->
                         <div class="admin-book-actions">
-                            <button type="button" class="btn-action-secondary btn-sm" @onclick="() => OpenPreview(book)">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                                <span>Preview PDF</span>
-                            </button>
+                            @if (!string.IsNullOrWhiteSpace(book.PublicUrl) && !book.IsRejected)
+                            {
+                                <button type="button" class="btn-action-secondary btn-sm" @onclick="() => OpenPreview(book)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <span>Preview PDF</span>
+                                </button>
+                            }
+                            else if (book.IsRejected)
+                            {
+                                <span class="muted" style="font-size:0.8125rem;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-default);border-radius:6px;">
+                                    <span>🗑️ PDF purged from storage</span>
+                                </span>
+                            }
 
-                            @if (book.IsPending || book.IsRejected)
+                            @if (book.IsPending)
                             {
                                 <button type="button" class="btn-accept btn-sm" @onclick="() => AcceptBook(book)" disabled="@isProcessing">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -214,7 +223,7 @@
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
-                                    <span>Reject</span>
+                                    <span>Reject & Delete PDF</span>
                                 </button>
                             }
                         </div>
@@ -257,9 +266,14 @@
                 <button type="button" class="modal-close-btn" @onclick="CloseRejectModal">×</button>
             </div>
             <div class="modal-body">
-                <p class="muted">Please provide a reason for rejecting this submission. The submitter will be able to see this reason in their submissions dashboard.</p>
+                <p class="muted">Please provide a reason for rejecting this submission. The submitter will be able to see this reason in their dashboard.</p>
 
-                <div class="form-group" style="margin-top:12px;">
+                <div style="margin-top:10px;padding:10px 14px;font-size:0.8125rem;background:rgba(239, 68, 68, 0.08);border:1px solid rgba(239, 68, 68, 0.25);border-radius:6px;color:var(--text-default);display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.1rem;">🗑️</span>
+                    <span><strong>Storage Cleanup:</strong> Confirming rejection will permanently delete this PDF document from Supabase Storage to free up space.</span>
+                </div>
+
+                <div class="form-group" style="margin-top:14px;">
                     <label>Common Reasons:</label>
                     <div class="reason-preset-chips">
                         <button type="button" class="preset-chip" @onclick='@(() => SetReasonPreset("Copyright infringement / Non-free content."))'>Copyright Concern</button>
@@ -279,7 +293,7 @@
                 <div class="modal-actions" style="margin-top:16px;">
                     <button type="button" class="btn-action-secondary" @onclick="CloseRejectModal">Cancel</button>
                     <button type="button" class="btn-reject" @onclick="ConfirmReject" disabled="@isProcessing">
-                        @(isProcessing ? "Processing..." : "Confirm Rejection")
+                        @(isProcessing ? "Deleting & Rejecting..." : "Confirm Rejection & Delete PDF")
                     </button>
                 </div>
             </div>
@@ -459,18 +473,28 @@
         try
         {
             var reason = string.IsNullOrWhiteSpace(rejectionReasonText) ? "Does not meet publishing guidelines." : rejectionReasonText;
+            var filePath = rejectBookTarget.FilePath;
+
             var res = await Supabase.UpdateSubmissionStatusAsync(
                 rejectBookTarget.Id,
                 "rejected",
-                reason
+                reason,
+                filePath
             );
 
             if (res.Success)
             {
+                if (!string.IsNullOrWhiteSpace(filePath))
+                {
+                    await Supabase.DeleteBookFileAsync(filePath);
+                }
+
                 rejectBookTarget.Status = "rejected";
                 rejectBookTarget.RejectionReason = reason;
+                rejectBookTarget.FilePath = "";
+                rejectBookTarget.PublicUrl = "";
                 rejectBookTarget.ReviewedAt = DateTime.UtcNow;
-                actionMessage = $"Submission \"{rejectBookTarget.Title}\" marked as rejected.";
+                actionMessage = $"Submission \"{rejectBookTarget.Title}\" rejected and PDF deleted from storage to save space.";
                 actionIsError = false;
                 CloseRejectModal();
             }

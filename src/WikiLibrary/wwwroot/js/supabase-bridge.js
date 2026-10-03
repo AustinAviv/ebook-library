@@ -249,6 +249,31 @@
         }
     };
 
+    // Delete PDF from Supabase Storage (frees storage space upon rejection)
+    window.supabaseDeleteBookFile = async function (filePath) {
+        const client = getClient();
+        if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
+        if (!filePath || filePath.trim().length === 0) return JSON.stringify({ success: true });
+
+        try {
+            console.log(`[SupabaseBridge] Deleting storage file to save space: ${filePath}`);
+            const { data, error } = await client.storage
+                .from(STORAGE_BUCKET)
+                .remove([filePath.trim()]);
+
+            if (error) {
+                console.warn("[SupabaseBridge] Storage removal error:", error);
+                return JSON.stringify({ success: false, error: error.message });
+            }
+
+            console.log(`[SupabaseBridge] Storage file deleted successfully: ${filePath}`);
+            return JSON.stringify({ success: true });
+        } catch (err) {
+            console.warn("[SupabaseBridge] Exception removing storage file:", err);
+            return JSON.stringify({ success: false, error: err.message || String(err) });
+        }
+    };
+
     // Database: Submissions
     window.supabaseCreateSubmission = async function (payloadJson) {
         const client = getClient();
@@ -341,7 +366,7 @@
         }
     };
 
-    window.supabaseUpdateSubmissionStatus = async function (id, newStatus, rejectionReason) {
+    window.supabaseUpdateSubmissionStatus = async function (id, newStatus, rejectionReason, filePath) {
         const client = getClient();
         if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
 
@@ -353,6 +378,19 @@
 
             if (newStatus === "rejected") {
                 updatePayload.rejection_reason = rejectionReason || "Does not meet publishing guidelines.";
+
+                // Automatically delete rejected PDF from Supabase Storage to reclaim space!
+                const fileToDelete = filePath;
+                if (fileToDelete && fileToDelete.trim().length > 0) {
+                    try {
+                        console.log(`[SupabaseBridge] Rejection: deleting file ${fileToDelete} from storage to save space...`);
+                        await client.storage.from(STORAGE_BUCKET).remove([fileToDelete.trim()]);
+                        updatePayload.file_path = "";
+                        updatePayload.public_url = "";
+                    } catch (storageErr) {
+                        console.warn("[SupabaseBridge] Storage delete warning on rejection:", storageErr);
+                    }
+                }
             } else if (newStatus === "accepted") {
                 updatePayload.rejection_reason = null;
             }
