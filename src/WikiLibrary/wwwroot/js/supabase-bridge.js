@@ -46,12 +46,14 @@
 
         // Listen for session changes to keep localStorage sync bulletproof
         try {
-            supabaseClient.auth.onAuthStateChange((event, session) => {
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 if (session && session.user) {
                     try {
+                        const r = await getUserRole(session.user.id);
                         localStorage.setItem("aviv_user_session", JSON.stringify({
                             id: session.user.id,
-                            email: session.user.email
+                            email: session.user.email,
+                            role: r
                         }));
                     } catch { }
                 } else if (event === "SIGNED_OUT") {
@@ -64,6 +66,25 @@
 
         return true;
     };
+
+    // Helper: fetch user role from database table user_roles
+    async function getUserRole(userId) {
+        if (!userId) return "user";
+        try {
+            const client = getClient();
+            if (!client) return "user";
+            const { data, error } = await client
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            if (error || !data) return "user";
+            return data.role || "user";
+        } catch {
+            return "user";
+        }
+    }
 
     // Auth methods
     window.supabaseAuthSignUp = async function (email, password) {
@@ -81,14 +102,16 @@
                 }
                 return JSON.stringify({ success: false, error: msg });
             }
+            let role = "user";
             if (data && data.user) {
+                role = await getUserRole(data.user.id);
                 try {
-                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email }));
+                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email, role: role }));
                 } catch { }
             }
             return JSON.stringify({
                 success: true,
-                user: data.user ? { id: data.user.id, email: data.user.email } : null,
+                user: data.user ? { id: data.user.id, email: data.user.email, role: role } : null,
                 session: data.session ? true : false
             });
         } catch (err) {
@@ -105,14 +128,16 @@
                 password: password
             });
             if (error) return JSON.stringify({ success: false, error: error.message });
+            let role = "user";
             if (data && data.user) {
+                role = await getUserRole(data.user.id);
                 try {
-                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email }));
+                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email, role: role }));
                 } catch { }
             }
             return JSON.stringify({
                 success: true,
-                user: data.user ? { id: data.user.id, email: data.user.email } : null
+                user: data.user ? { id: data.user.id, email: data.user.email, role: role } : null
             });
         } catch (err) {
             return JSON.stringify({ success: false, error: err.message || String(err) });
@@ -149,9 +174,12 @@
             // 1. Check getSession first (fastest, reads from localStorage without network roundtrip)
             const { data: sessionData } = await client.auth.getSession();
             if (sessionData && sessionData.session && sessionData.session.user) {
+                const user = sessionData.session.user;
+                const role = await getUserRole(user.id);
                 const u = {
-                    id: sessionData.session.user.id,
-                    email: sessionData.session.user.email
+                    id: user.id,
+                    email: user.email,
+                    role: role
                 };
                 try {
                     localStorage.setItem("aviv_user_session", JSON.stringify(u));
@@ -162,9 +190,12 @@
             // 2. Network verification
             const { data, error } = await client.auth.getUser();
             if (!error && data && data.user) {
+                const user = data.user;
+                const role = await getUserRole(user.id);
                 const u = {
-                    id: data.user.id,
-                    email: data.user.email
+                    id: user.id,
+                    email: user.email,
+                    role: role
                 };
                 try {
                     localStorage.setItem("aviv_user_session", JSON.stringify(u));

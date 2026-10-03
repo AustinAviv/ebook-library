@@ -21,6 +21,12 @@ public class SupabaseUser
 
     [JsonPropertyName("email")]
     public string Email { get; set; } = "";
+
+    [JsonPropertyName("role")]
+    public string Role { get; set; } = "user";
+
+    public bool IsOwner => string.Equals(Role, "owner", StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(Role, "admin", StringComparison.OrdinalIgnoreCase);
 }
 
 public class SupabaseAuthResult

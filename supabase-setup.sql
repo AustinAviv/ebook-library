@@ -1,30 +1,52 @@
 -- ==========================================================
 -- Aviv Library - Supabase Database & Storage Setup Script
--- Dynamic Admin & Security Architecture
+-- Role-Based Access Control (RBAC): User vs Owner
 -- ==========================================================
 
--- 1. Create the app_admins table (dynamic admin management)
-create table if not exists public.app_admins (
-    email text primary key,
+-- 1. Create the user_roles table (Role-Based Access Control)
+create table if not exists public.user_roles (
+    user_id uuid primary key references auth.users(id) on delete cascade,
+    role text not null default 'user' check (role in ('user', 'owner', 'admin')),
     created_at timestamptz default now() not null
 );
 
--- Enable RLS on app_admins
-alter table public.app_admins enable row level security;
+-- Enable RLS on user_roles
+alter table public.user_roles enable row level security;
 
--- Seed with initial admin:
-insert into public.app_admins (email)
-values ('abhikr6714@gmail.com')
-on conflict (email) do nothing;
-
--- Fix: app_admins select policy must NEVER query itself to prevent 42P17 infinite recursion
+-- Allow reading user roles (anyone can read so client & policies can resolve role)
+drop policy if exists "Allow read user_roles" on public.user_roles;
 drop policy if exists "Admins can view admins" on public.app_admins;
 drop policy if exists "Anyone can read app_admins" on public.app_admins;
-create policy "Anyone can read app_admins"
-on public.app_admins for select
+create policy "Allow read user_roles"
+on public.user_roles for select
 using (true);
 
--- Helper security definer function: bypasses RLS and verifies admin status safely
+-- Trigger: newly created users automatically get the default 'user' role
+create or replace function public.handle_new_user_role()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.user_roles (user_id, role)
+  values (new.id, 'user')
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created_role on auth.users;
+create trigger on_auth_user_created_role
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user_role();
+
+-- Backfill any existing users in auth.users into user_roles
+insert into public.user_roles (user_id, role)
+select id, 'user' from auth.users
+on conflict (user_id) do nothing;
+
+-- Helper security definer function: checks if authenticated user has 'owner' or 'admin' role
 create or replace function public.is_platform_admin()
 returns boolean
 language sql
@@ -32,9 +54,10 @@ security definer
 set search_path = public
 as $$
   select exists (
-    select 1 from public.app_admins
-    where lower(email) = lower(auth.jwt()->>'email')
-  ) or lower(coalesce(auth.jwt()->>'email', '')) = 'abhikr6714@gmail.com';
+    select 1 from public.user_roles
+    where user_id = auth.uid()
+      and role in ('owner', 'admin')
+  );
 $$;
 
 -- 2. Create the book_submissions table

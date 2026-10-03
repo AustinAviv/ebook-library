@@ -12,11 +12,8 @@ public class SupabaseService
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public AppConfig? Config { get; private set; }
-    public string OwnerEmail => Config?.OwnerEmail ?? "";
     public SupabaseUser? CurrentUser { get; private set; }
-    public bool IsOwner => !string.IsNullOrWhiteSpace(CurrentUser?.Email) &&
-                           !string.IsNullOrWhiteSpace(OwnerEmail) &&
-                           string.Equals(CurrentUser.Email.Trim(), OwnerEmail.Trim(), StringComparison.OrdinalIgnoreCase);
+    public bool IsOwner => CurrentUser != null && CurrentUser.IsOwner;
 
     public bool IsAuthenticated => CurrentUser != null;
     public bool IsInitialized { get; private set; }
@@ -111,6 +108,20 @@ public class SupabaseService
         {
             return new SupabaseAuthResult { Success = false, Error = ex.Message };
         }
+    }
+
+    public async Task ReloadUserSessionAsync()
+    {
+        try
+        {
+            var userJson = await _js.InvokeAsync<string?>("supabaseAuthGetUser");
+            if (!string.IsNullOrWhiteSpace(userJson))
+            {
+                CurrentUser = JsonSerializer.Deserialize<SupabaseUser>(userJson, JsonOptions);
+                AuthStateChanged?.Invoke();
+            }
+        }
+        catch { }
     }
 
     public async Task SignOutAsync()

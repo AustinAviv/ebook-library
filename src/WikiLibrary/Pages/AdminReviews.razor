@@ -30,15 +30,24 @@
             </div>
             <h2>Platform Owner Authentication</h2>
             <p class="muted">
-                This portal is reserved for the platform administrator (@(string.IsNullOrWhiteSpace(Supabase.OwnerEmail) ? "Admin" : Supabase.OwnerEmail)) to review submitted books, preview PDFs, and accept or reject publications.
+                This portal is reserved for users with the <strong>Owner</strong> role to review submitted books, preview PDFs, and manage catalog publication.
             </p>
 
             @if (Supabase.IsAuthenticated)
             {
                 <div class="auth-alert error" style="margin-top:16px;">
-                    Signed in as <strong>@Supabase.CurrentUser?.Email</strong>. This account does not have owner privileges.
+                    Signed in as <strong>@Supabase.CurrentUser?.Email</strong> (Role: <code>@Supabase.CurrentUser?.Role</code>).
+                    This account is not designated as an owner in the database.
+                    <div style="margin-top:10px;font-size:0.8125rem;line-height:1.5;color:var(--text-default);">
+                        💡 <strong>How to activate owner access:</strong> In your Supabase Dashboard, open <strong>Table Editor &gt; user_roles</strong>, find your user, set <code>role = 'owner'</code>, and click the button below!
+                    </div>
                 </div>
-                <button type="button" class="btn-action-secondary" @onclick="Supabase.SignOutAsync" style="margin-top:12px;">Sign Out</button>
+                <div style="display:flex;gap:10px;margin-top:14px;">
+                    <button type="button" class="btn-action-primary btn-sm" @onclick="CheckOwnerRole" disabled="@isLoading">
+                        @(isLoading ? "Checking Role..." : "🔄 Check Role Again")
+                    </button>
+                    <button type="button" class="btn-action-secondary btn-sm" @onclick="Supabase.SignOutAsync">Sign Out</button>
+                </div>
             }
             else
             {
@@ -49,8 +58,8 @@
 
                 <form class="owner-login-form" @onsubmit="HandleOwnerLogin" @onsubmit:preventDefault>
                     <div class="form-group">
-                        <label for="admin-email">Owner Email</label>
-                        <input id="admin-email" type="email" class="form-input" placeholder="abhikr6714@gmail.com"
+                        <label for="admin-email">Email Address</label>
+                        <input id="admin-email" type="email" class="form-input" placeholder="you@example.com"
                                required @bind="adminEmail" disabled="@isLoggingIn" />
                     </div>
 
@@ -61,7 +70,7 @@
                     </div>
 
                     <button type="submit" class="btn-action-primary w-full" disabled="@isLoggingIn" style="margin-top:12px;">
-                        @(isLoggingIn ? "Signing In..." : "Sign In as Platform Owner")
+                        @(isLoggingIn ? "Signing In..." : "Sign In to Review Portal")
                     </button>
                 </form>
             }
@@ -79,7 +88,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                     </svg>
-                    Owner: <strong>@Supabase.CurrentUser?.Email</strong>
+                    👑 Role: <strong>@Supabase.CurrentUser?.Role.ToUpperInvariant()</strong> (@Supabase.CurrentUser?.Email)
                 </span>
                 <button type="button" class="btn-action-secondary btn-sm" @onclick="RefreshSubmissions" disabled="@isLoading">
                     @(isLoading ? "Refreshing..." : "Refresh")
@@ -329,10 +338,6 @@
     protected override async Task OnInitializedAsync()
     {
         await Supabase.EnsureInitializedAsync();
-        if (string.IsNullOrWhiteSpace(adminEmail))
-        {
-            adminEmail = Supabase.OwnerEmail;
-        }
         Supabase.AuthStateChanged += OnAuthStateChanged;
         if (Supabase.IsOwner)
         {
@@ -352,6 +357,24 @@
         });
     }
 
+    private async Task CheckOwnerRole()
+    {
+        isLoading = true;
+        try
+        {
+            await Supabase.ReloadUserSessionAsync();
+            if (Supabase.IsOwner)
+            {
+                await RefreshSubmissions();
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task HandleOwnerLogin()
     {
         isLoggingIn = true;
@@ -365,7 +388,7 @@
             }
             else if (!Supabase.IsOwner)
             {
-                loginError = $"You logged in with an account that is not designated as the platform owner ({Supabase.OwnerEmail}).";
+                loginError = $"Logged in as {Supabase.CurrentUser?.Email} with role '{Supabase.CurrentUser?.Role}'. To access this portal, set your role to 'owner' in the user_roles table in Supabase.";
             }
             else
             {
