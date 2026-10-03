@@ -9,8 +9,8 @@ const redis = new Redis({
 const RATE_LIMIT_MAX = 25;
 const RATE_LIMIT_WINDOW_SEC = 120;
 const PUBLIC_BLOB_BASE = 'https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com';
-const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://tiwpirzwtpxdpdfqrzoe.supabase.co';
-const SUPABASE_ANON_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_fNzWE8j076OWPvyKR2Euow_TrqHBbxv';
+const SUPABASE_URL = (process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
+const SUPABASE_ANON_KEY = (process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
 
 const localRateLimits = new Map();
 
@@ -32,12 +32,22 @@ setInterval(() => {
   }
 }, 60_000);
 
+function getSupabaseHost() {
+  if (!SUPABASE_URL) return '';
+  try {
+    return new URL(SUPABASE_URL).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
 function isValidSupabaseStorageUrl(url) {
   if (!url || typeof url !== 'string') return false;
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
-    const isSupabaseHost = host.endsWith('.supabase.co') || host === new URL(SUPABASE_URL).hostname.toLowerCase();
+    const configuredHost = getSupabaseHost();
+    const isSupabaseHost = host.endsWith('.supabase.co') || (configuredHost && host === configuredHost);
     return isSupabaseHost && parsed.pathname.includes('/storage/v1/object/public/book-submissions/');
   } catch {
     return false;
@@ -137,7 +147,7 @@ export default async function handler(req, res) {
     }
   }
   // 3. Community Published Books: Dynamic lookup via Supabase REST API (when only ?id= is given)
-  else {
+  else if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     const numId = parseInt(id, 10);
     const submissionId = numId >= 100000 ? numId - 100000 : numId;
 
