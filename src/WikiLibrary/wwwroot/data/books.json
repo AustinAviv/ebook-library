@@ -398,5 +398,85 @@
     "blobPathname": "books/writing-an-interpreter-in-go.pdf",
     "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/writing-an-interpreter-in-go.pdf?download=1",
     "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/writing-an-interpreter-in-go.pdf"
+  },
+  {
+    "id": 59,
+    "title": "API Design Patterns (JJ Geewax) (z library sk, 1lib sk, z lib sk)",
+    "fileSize": 12034434,
+    "blobPathname": "books/api-design-patterns-jj-geewax-z-library-sk-1lib-sk-z-lib-sk.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/api-design-patterns-jj-geewax-z-library-sk-1lib-sk-z-lib-sk.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/api-design-patterns-jj-geewax-z-library-sk-1lib-sk-z-lib-sk.pdf"
+  },
+  {
+    "id": 60,
+    "title": "Cracking the Coding Interview 6th Edition (2)",
+    "fileSize": 56423124,
+    "blobPathname": "books/cracking-the-coding-interview-6th-edition-2.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/cracking-the-coding-interview-6th-edition-2.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/cracking-the-coding-interview-6th-edition-2.pdf"
+  },
+  {
+    "id": 61,
+    "title": "Database Internals",
+    "fileSize": 15543540,
+    "blobPathname": "books/database-internals.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/database-internals.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/database-internals.pdf"
+  },
+  {
+    "id": 62,
+    "title": "Designing Data Intensive Applications The Big Ideas Behind Reliable, Scalable, and Maintainable Systems by Martin Kleppmann (z lib org)",
+    "fileSize": 24443850,
+    "blobPathname": "books/designing-data-intensive-applications-the-big-ideas-behind-reliable-scalable-and-maintainable-systems-by-martin-kleppmann-z-lib-org.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/designing-data-intensive-applications-the-big-ideas-behind-reliable-scalable-and-maintainable-systems-by-martin-kleppmann-z-lib-org.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/designing-data-intensive-applications-the-big-ideas-behind-reliable-scalable-and-maintainable-systems-by-martin-kleppmann-z-lib-org.pdf"
+  },
+  {
+    "id": 63,
+    "title": "Designing Data Intensive Applications, 2nd Edition (Martin Kleppmann, Chris Riccomini) (z library sk, 1lib sk, z lib sk)",
+    "fileSize": 10170696,
+    "blobPathname": "books/designing-data-intensive-applications-2nd-edition-martin-kleppmann-chris-riccomini-z-library-sk-1lib-sk-z-lib-sk.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/designing-data-intensive-applications-2nd-edition-martin-kleppmann-chris-riccomini-z-library-sk-1lib-sk-z-lib-sk.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/designing-data-intensive-applications-2nd-edition-martin-kleppmann-chris-riccomini-z-library-sk-1lib-sk-z-lib-sk.pdf"
+  },
+  {
+    "id": 64,
+    "title": "EN CNTNT eBook DesigningDistributedSystems",
+    "fileSize": 5829132,
+    "blobPathname": "books/en-cntnt-ebook-designingdistributedsystems.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/en-cntnt-ebook-designingdistributedsystems.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/en-cntnt-ebook-designingdistributedsystems.pdf"
+  },
+  {
+    "id": 65,
+    "title": "Fundamentals of Software Architecture An Engineering Approach (Mark Richards, Neal Ford) (Z Library)",
+    "fileSize": 24625023,
+    "blobPathname": "books/fundamentals-of-software-architecture-an-engineering-approach-mark-richards-neal-ford-z-library.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/fundamentals-of-software-architecture-an-engineering-approach-mark-richards-neal-ford-z-library.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/fundamentals-of-software-architecture-an-engineering-approach-mark-richards-neal-ford-z-library.pdf"
+  },
+  {
+    "id": 66,
+    "title": "K8s Official",
+    "fileSize": 2942995,
+    "blobPathname": "books/k8s-official.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/k8s-official.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/k8s-official.pdf"
+  },
+  {
+    "id": 67,
+    "title": "SQL Cookbook 2nd Edition Anthony Molinaro, Robert de Graaf O\u0027Reilly Media (2020)",
+    "fileSize": 6637937,
+    "blobPathname": "books/sql-cookbook-2nd-edition-anthony-molinaro-robert-de-graaf-oreilly-media-2020.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/sql-cookbook-2nd-edition-anthony-molinaro-robert-de-graaf-oreilly-media-2020.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/sql-cookbook-2nd-edition-anthony-molinaro-robert-de-graaf-oreilly-media-2020.pdf"
+  },
+  {
+    "id": 68,
+    "title": "System Design Interview An Insider\u2019s Guide by Alex Xu (z lib org)",
+    "fileSize": 23038561,
+    "blobPathname": "books/system-design-interview-an-insiders-guide-by-alex-xu-z-lib-org.pdf",
+    "downloadUrl": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/system-design-interview-an-insiders-guide-by-alex-xu-z-lib-org.pdf?download=1",
+    "url": "https://awewxdgwtlwxy5wf.public.blob.vercel-storage.com/books/system-design-interview-an-insiders-guide-by-alex-xu-z-lib-org.pdf"
   }
 ]
