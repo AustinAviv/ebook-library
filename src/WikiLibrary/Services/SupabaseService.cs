@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.JSInterop;
 using WikiLibrary.Models;
@@ -7,18 +8,25 @@ namespace WikiLibrary.Services;
 public class SupabaseService
 {
     private readonly IJSRuntime _js;
+    private readonly HttpClient _http;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
+    public AppConfig? Config { get; private set; }
+    public string OwnerEmail => Config?.OwnerEmail ?? "";
     public SupabaseUser? CurrentUser { get; private set; }
-    public bool IsOwner => CurrentUser?.IsOwner == true;
+    public bool IsOwner => !string.IsNullOrWhiteSpace(CurrentUser?.Email) &&
+                           !string.IsNullOrWhiteSpace(OwnerEmail) &&
+                           string.Equals(CurrentUser.Email.Trim(), OwnerEmail.Trim(), StringComparison.OrdinalIgnoreCase);
+
     public bool IsAuthenticated => CurrentUser != null;
     public bool IsInitialized { get; private set; }
 
     public event Action? AuthStateChanged;
 
-    public SupabaseService(IJSRuntime js)
+    public SupabaseService(IJSRuntime js, HttpClient http)
     {
         _js = js;
+        _http = http;
     }
 
     public async Task EnsureInitializedAsync()
@@ -26,6 +34,33 @@ public class SupabaseService
         if (IsInitialized) return;
         try
         {
+            // 1. Load dynamic config from data/config.json or /api/config
+            AppConfig? cfg = null;
+            try
+            {
+                cfg = await _http.GetFromJsonAsync<AppConfig>("data/config.json");
+            }
+            catch { }
+
+            if (cfg == null || string.IsNullOrWhiteSpace(cfg.SupabaseUrl))
+            {
+                try
+                {
+                    cfg = await _http.GetFromJsonAsync<AppConfig>("api/config");
+                }
+                catch { }
+            }
+
+            if (cfg != null)
+            {
+                Config = cfg;
+                if (!string.IsNullOrWhiteSpace(cfg.SupabaseUrl) && !string.IsNullOrWhiteSpace(cfg.SupabaseAnonKey))
+                {
+                    await _js.InvokeAsync<bool>("supabaseInit", cfg.SupabaseUrl, cfg.SupabaseAnonKey);
+                }
+            }
+
+            // 2. Fetch current user session
             var userJson = await _js.InvokeAsync<string?>("supabaseAuthGetUser");
             if (!string.IsNullOrWhiteSpace(userJson))
             {

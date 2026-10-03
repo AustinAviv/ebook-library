@@ -1,10 +1,9 @@
 // Supabase Bridge for Aviv Library (Blazor WASM)
 (function () {
-    const DEFAULT_SUPABASE_URL = "https://tiwpirzwtpxdpdfqrzoe.supabase.co";
-    const DEFAULT_ANON_KEY = "sb_publishable_fNzWE8j076OWPvyKR2Euow_TrqHBbxv";
     const STORAGE_BUCKET = "book-submissions";
-
     let supabaseClient = null;
+    let configuredUrl = "";
+    let configuredKey = "";
 
     function getClient() {
         if (!supabaseClient) {
@@ -12,7 +11,11 @@
                 console.error("[SupabaseBridge] Supabase library is not loaded.");
                 return null;
             }
-            supabaseClient = window.supabase.createClient(DEFAULT_SUPABASE_URL, DEFAULT_ANON_KEY, {
+            if (!configuredUrl || !configuredKey) {
+                console.warn("[SupabaseBridge] Supabase not initialized with URL and Key.");
+                return null;
+            }
+            supabaseClient = window.supabase.createClient(configuredUrl, configuredKey, {
                 auth: {
                     persistSession: true,
                     autoRefreshToken: true,
@@ -28,7 +31,11 @@
         if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
             return false;
         }
-        supabaseClient = window.supabase.createClient(url || DEFAULT_SUPABASE_URL, anonKey || DEFAULT_ANON_KEY, {
+        configuredUrl = (url || "").trim();
+        configuredKey = (anonKey || "").trim();
+        if (!configuredUrl || !configuredKey) return false;
+
+        supabaseClient = window.supabase.createClient(configuredUrl, configuredKey, {
             auth: {
                 persistSession: true,
                 autoRefreshToken: true,

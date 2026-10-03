@@ -307,6 +307,30 @@ static void CopySite()
     CopyDirectory(PublishWwwRoot, PublicDir);
     Console.WriteLine("done.");
 
+    var supabaseUrl = GetEnvVar("PUBLIC_SUPABASE_URL") ?? GetEnvVar("SUPABASE_URL") ?? "";
+    var supabaseAnonKey = GetEnvVar("PUBLIC_SUPABASE_ANON_KEY") ?? GetEnvVar("SUPABASE_ANON_KEY") ?? "";
+    var ownerEmail = GetEnvVar("OWNER_EMAIL") ?? GetEnvVar("PUBLIC_OWNER_EMAIL") ?? "";
+
+    if (!string.IsNullOrWhiteSpace(supabaseUrl) && !string.IsNullOrWhiteSpace(supabaseAnonKey))
+    {
+        var configObj = new JsonObject
+        {
+            ["supabaseUrl"] = supabaseUrl,
+            ["supabaseAnonKey"] = supabaseAnonKey,
+            ["ownerEmail"] = ownerEmail
+        };
+        var configJson = JsonSerializer.Serialize(configObj, new JsonSerializerOptions { WriteIndented = true });
+
+        var pubConfigDir = Path.Combine(PublicDir, "data");
+        Directory.CreateDirectory(pubConfigDir);
+        File.WriteAllText(Path.Combine(pubConfigDir, "config.json"), configJson);
+
+        var srcConfigDir = Path.Combine("src", "WikiLibrary", "wwwroot", "data");
+        Directory.CreateDirectory(srcConfigDir);
+        File.WriteAllText(Path.Combine(srcConfigDir, "config.json"), configJson);
+        Console.WriteLine("[OK] Generated data/config.json from environment variables.");
+    }
+
     var frameworkDir  = Path.Combine(PublicDir, "_framework");
     var allFramework  = Directory.EnumerateFiles(frameworkDir)
                                  .Select(Path.GetFileName)

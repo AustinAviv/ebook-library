@@ -23,7 +23,7 @@
             </div>
             <h2>Platform Owner Authentication</h2>
             <p class="muted">
-                This portal is reserved for the platform administrator (<strong>abhikr6714@gmail.com</strong>) to review submitted books, preview PDFs, and accept or reject publications.
+                This portal is reserved for the platform administrator (@(string.IsNullOrWhiteSpace(Supabase.OwnerEmail) ? "Admin" : Supabase.OwnerEmail)) to review submitted books, preview PDFs, and accept or reject publications.
             </p>
 
             @if (Supabase.IsAuthenticated)
@@ -256,7 +256,7 @@
 }
 
 @code {
-    private string adminEmail = "abhikr6714@gmail.com";
+    private string adminEmail = "";
     private string adminPassword = "";
     private string? loginError;
     private bool isLoggingIn = false;
@@ -281,6 +281,10 @@
     protected override async Task OnInitializedAsync()
     {
         await Supabase.EnsureInitializedAsync();
+        if (string.IsNullOrWhiteSpace(adminEmail))
+        {
+            adminEmail = Supabase.OwnerEmail;
+        }
         Supabase.AuthStateChanged += OnAuthStateChanged;
         if (Supabase.IsOwner)
         {
@@ -313,7 +317,7 @@
             }
             else if (!Supabase.IsOwner)
             {
-                loginError = "You logged in with an account that is not abhikr6714@gmail.com.";
+                loginError = $"You logged in with an account that is not designated as the platform owner ({Supabase.OwnerEmail}).";
             }
             else
             {

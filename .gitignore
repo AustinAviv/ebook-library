@@ -7,5 +7,4 @@ bin
 obj
 public/*
 !public/.gitkeep
-
-.env*
+src/WikiLibrary/wwwroot/data/config.json

@@ -2,6 +2,18 @@ using System.Text.Json.Serialization;
 
 namespace WikiLibrary.Models;
 
+public class AppConfig
+{
+    [JsonPropertyName("supabaseUrl")]
+    public string? SupabaseUrl { get; set; }
+
+    [JsonPropertyName("supabaseAnonKey")]
+    public string? SupabaseAnonKey { get; set; }
+
+    [JsonPropertyName("ownerEmail")]
+    public string? OwnerEmail { get; set; }
+}
+
 public class SupabaseUser
 {
     [JsonPropertyName("id")]
@@ -9,9 +21,6 @@ public class SupabaseUser
 
     [JsonPropertyName("email")]
     public string Email { get; set; } = "";
-
-    public bool IsOwner => !string.IsNullOrWhiteSpace(Email) &&
-                           string.Equals(Email.Trim(), "abhikr6714@gmail.com", StringComparison.OrdinalIgnoreCase);
 }
 
 public class SupabaseAuthResult

@@ -9,7 +9,8 @@
   },
   "functions": {
     "api/download.js": { "includeFiles": "api/_catalog.json", "maxDuration": 10 },
-    "api/stats.js": { "maxDuration": 10 }
+    "api/stats.js": { "maxDuration": 10 },
+    "api/config.js": { "maxDuration": 10 }
   },
   "rewrites": [
     { "source": "/((?!api/|_framework/|data/|css/).*)", "destination": "/index.html" }
