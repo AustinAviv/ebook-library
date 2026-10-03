@@ -31,6 +31,18 @@ public class SupabaseService
         if (IsInitialized) return;
         try
         {
+            // Fast-path: immediately restore cached user session from localStorage without waiting for network
+            try
+            {
+                var fastCachedUser = await _js.InvokeAsync<string?>("localStorage.getItem", "aviv_user_session");
+                if (!string.IsNullOrWhiteSpace(fastCachedUser))
+                {
+                    CurrentUser = JsonSerializer.Deserialize<SupabaseUser>(fastCachedUser, JsonOptions);
+                    AuthStateChanged?.Invoke();
+                }
+            }
+            catch { }
+
             // 1. Load dynamic config from data/config.json or /api/config
             AppConfig? cfg = null;
             try
@@ -57,11 +69,25 @@ public class SupabaseService
                 }
             }
 
-            // 2. Fetch current user session
+            // 2. Fetch and verify current user session with Supabase
             var userJson = await _js.InvokeAsync<string?>("supabaseAuthGetUser");
             if (!string.IsNullOrWhiteSpace(userJson))
             {
-                CurrentUser = JsonSerializer.Deserialize<SupabaseUser>(userJson, JsonOptions);
+                var verified = JsonSerializer.Deserialize<SupabaseUser>(userJson, JsonOptions);
+                if (verified != null)
+                {
+                    CurrentUser = verified;
+                    AuthStateChanged?.Invoke();
+                }
+            }
+            else
+            {
+                // If verified session is null (e.g. token expired and cannot refresh), clear local session
+                if (CurrentUser != null)
+                {
+                    CurrentUser = null;
+                    AuthStateChanged?.Invoke();
+                }
             }
             IsInitialized = true;
         }

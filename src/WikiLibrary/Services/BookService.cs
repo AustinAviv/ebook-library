@@ -79,28 +79,65 @@ public class BookService
         {
             try
             {
-                var rawJson = await _http.GetStringAsync("data/books.json");
+                // Run static catalog fetch and Supabase initialization in parallel
+                var staticTask = _http.GetStringAsync("data/books.json");
+                var initTask = _supabase.EnsureInitializedAsync();
+
+                await Task.WhenAll(staticTask, initTask);
+
+                var rawJson = await staticTask;
                 var books = JsonSerializer.Deserialize<List<Book>>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
 
-                await _supabase.EnsureInitializedAsync();
-                var removedIds = await _supabase.GetRemovedCatalogBooksAsync();
+                // Fetch removed IDs and accepted community books in parallel
+                var removedTask = _supabase.GetRemovedCatalogBooksAsync();
+                var acceptedTask = _supabase.GetAcceptedBooksAsync();
+
+                await Task.WhenAll(removedTask, acceptedTask);
+
+                var removedIds = await removedTask;
                 if (removedIds != null && removedIds.Count > 0)
                 {
                     var removedSet = new HashSet<int>(removedIds);
                     books = books.Where(b => !removedSet.Contains(b.Id)).ToList();
                 }
 
-                ApplyBooks(books);
+                var accepted = await acceptedTask;
+                if (accepted != null && accepted.Count > 0)
+                {
+                    foreach (var sub in accepted)
+                    {
+                        int virtualId = (int)(100000 + sub.Id);
+                        books.Add(new Book
+                        {
+                            Id = virtualId,
+                            Title = sub.Title,
+                            Author = sub.Author,
+                            Description = sub.Description,
+                            Category = !string.IsNullOrWhiteSpace(sub.Category) ? sub.Category : "Community Published",
+                            Year = sub.Year,
+                            Language = sub.Language,
+                            Pages = sub.Pages,
+                            FileSize = sub.FileSize,
+                            Url = sub.PublicUrl,
+                            DownloadUrl = sub.PublicUrl,
+                            IsCommunityPublished = true,
+                            StorageFilePath = sub.FilePath,
+                            SubmissionId = sub.Id
+                        });
+                    }
+                }
 
-                await RefreshCommunityBooksAsync();
+                ApplyBooks(books);
 
                 IsLoaded = true;
                 LoadError = null;
                 LoadedChanged?.Invoke();
 
+                // Cache the complete, unified catalog for instantaneous loading on next visit
                 try
                 {
-                    await _js.InvokeVoidAsync("saveCatalogCache", rawJson);
+                    var unifiedJson = JsonSerializer.Serialize(_sorted);
+                    await _js.InvokeVoidAsync("saveCatalogCache", unifiedJson);
                 }
                 catch { }
 
@@ -174,6 +211,17 @@ public class BookService
         {
             ApplyBooks(existingList);
             LoadedChanged?.Invoke();
+            StatsChanged?.Invoke();
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var unifiedJson = JsonSerializer.Serialize(_sorted);
+                    await _js.InvokeVoidAsync("saveCatalogCache", unifiedJson);
+                }
+                catch { }
+            });
         }
     }
 
@@ -185,6 +233,16 @@ public class BookService
             ApplyBooks(updatedList);
             LoadedChanged?.Invoke();
             StatsChanged?.Invoke();
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var unifiedJson = JsonSerializer.Serialize(_sorted);
+                    await _js.InvokeVoidAsync("saveCatalogCache", unifiedJson);
+                }
+                catch { }
+            });
         }
     }
 

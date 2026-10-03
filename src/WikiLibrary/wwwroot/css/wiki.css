@@ -141,6 +141,16 @@ input:focus-visible {
   to { transform: rotate(360deg); }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .skeleton-row {
   display: flex;
   align-items: center;
@@ -159,8 +169,10 @@ input:focus-visible {
 
 .skeleton-line {
   height: 14px;
-  border-radius: 4px;
-  background-color: var(--bg-page);
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-hover) 50%, var(--bg-subtle) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
   border: 1px solid var(--border-default);
 }
 
@@ -176,7 +188,9 @@ input:focus-visible {
   width: 84px;
   height: 32px;
   border-radius: 6px;
-  background-color: var(--bg-page);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-hover) 50%, var(--bg-subtle) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
   border: 1px solid var(--border-default);
   flex-shrink: 0;
 }
@@ -185,11 +199,11 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px;
+  padding: 20px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 8px;
-  min-height: 210px;
+  border-radius: 12px;
+  min-height: 220px;
   gap: 12px;
 }
 
@@ -204,6 +218,9 @@ input:focus-visible {
   top: 0;
   z-index: 100;
   gap: 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.2s ease;
 }
 
 .brand {
@@ -596,6 +613,7 @@ input:focus-visible {
   min-width: 0;
   padding: 32px;
   background-color: var(--bg-page);
+  animation: pageEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .firstHeading, .page-title {
@@ -635,17 +653,18 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px;
+  padding: 20px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 8px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  min-height: 210px;
+  border-radius: 12px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 220px;
 }
 
 .book-card-item:hover {
-  border-color: var(--link-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--accent);
 }
 
 .book-card-top {
