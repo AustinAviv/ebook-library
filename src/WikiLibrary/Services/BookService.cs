@@ -35,6 +35,7 @@ public class BookService
     public string? LoadError { get; private set; }
     public IReadOnlyList<Book> All => _sorted;
     public int Count => _sorted.Count;
+    public IReadOnlyList<Book> RecentlyPublished => _sorted.Where(b => b.IsCommunityPublished).OrderByDescending(b => b.Id).ToList();
     public IReadOnlyList<(string Name, int Count)> Categories { get; private set; } = new List<(string, int)>();
 
     public event Action? StatsChanged;
@@ -83,11 +84,12 @@ public class BookService
 
                 ApplyBooks(books);
 
+                // Fetch live community accepted books from Supabase before declaring loaded
+                await RefreshCommunityBooksAsync();
+
                 IsLoaded = true;
                 LoadError = null;
                 LoadedChanged?.Invoke();
-
-                _ = RefreshCommunityBooksAsync();
 
                 try
                 {
@@ -115,6 +117,7 @@ public class BookService
     {
         try
         {
+            await _supabase.EnsureInitializedAsync();
             var accepted = await _supabase.GetAcceptedBooksAsync();
             if (accepted.Count > 0)
             {

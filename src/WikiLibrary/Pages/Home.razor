@@ -46,8 +46,23 @@ else
         Free forever, no registration, no tracking.
     </p>
 
+    @if (Books.RecentlyPublished.Count > 0 && (PageNo == null || PageNo <= 1))
+    {
+        <section class="recently-published-section" style="margin-bottom:28px;padding:20px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:12px;">
+            <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.25rem;">✨</span>
+                    <h2 class="section-title" style="margin:0;border:none;font-size:1.15rem;">Recently Published Additions</h2>
+                    <span class="submission-status-pill badge-status-accepted" style="font-size:0.75rem;padding:2px 8px;">Community</span>
+                </div>
+                <span class="muted" style="font-size:0.875rem;">@Books.RecentlyPublished.Count book@(Books.RecentlyPublished.Count == 1 ? "" : "s")</span>
+            </div>
+            <BookList Books="Books.RecentlyPublished" />
+        </section>
+    }
+
     <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:baseline;margin-top:1.5em;margin-bottom:12px;">
-        <h2 class="section-title" style="margin:0;border:none;">Available Books</h2>
+        <h2 class="section-title" style="margin:0;border:none;">All Books Archive</h2>
         <span class="muted">Showing @pageItems.Count of @total book@(total == 1 ? "" : "s")</span>
     </div>
 
@@ -61,9 +76,11 @@ else
     private int total;
     private IReadOnlyList<Book> pageItems = Array.Empty<Book>();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Books.LoadedChanged += OnLoaded;
+        await Books.EnsureLoadedAsync();
+        UpdatePage();
     }
 
     private void OnLoaded()

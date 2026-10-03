@@ -2,6 +2,7 @@
 @inject SupabaseService Supabase
 @inject NavigationManager Nav
 @inject BookService Books
+@implements IDisposable
 
 <PageTitle>Submit a Book - Aviv Library</PageTitle>
 
@@ -74,14 +75,73 @@
             </div>
         </div>
     }
+    else if (!Supabase.IsInitialized)
+    {
+        <div class="submissions-loading" style="padding:60px 20px;text-align:center;">
+            <div class="loader-spinner"></div>
+            <p class="muted" style="margin-top:16px;">Verifying authentication status...</p>
+        </div>
+    }
+    else if (!Supabase.IsAuthenticated)
+    {
+        <div class="owner-auth-card" style="margin-top:20px;">
+            <div class="lock-icon-box">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <h2>Sign In Required to Submit Books</h2>
+            <p class="muted">
+                To prevent spam and allow you to track your publications, you must sign in with your email and password before uploading a book.
+            </p>
+
+            @if (!string.IsNullOrWhiteSpace(loginError))
+            {
+                <div class="auth-alert error" style="margin-top:16px;">@loginError</div>
+            }
+
+            <form class="owner-login-form" @onsubmit="HandleUserLogin" @onsubmit:preventDefault>
+                <div class="form-group">
+                    <label for="publish-email">Email Address</label>
+                    <input id="publish-email" type="email" class="form-input" placeholder="you@example.com"
+                           required @bind="authEmail" disabled="@isAuthenticating" />
+                </div>
+
+                <div class="form-group">
+                    <label for="publish-pass">Password</label>
+                    <input id="publish-pass" type="password" class="form-input" placeholder="••••••••"
+                           required @bind="authPassword" disabled="@isAuthenticating" />
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:16px;">
+                    <button type="submit" class="btn-action-primary" style="flex:1;" disabled="@isAuthenticating">
+                        @(isAuthenticating ? "Signing In..." : "Sign In & Continue")
+                    </button>
+                    <button type="button" class="btn-action-secondary" @onclick="HandleUserSignUp" disabled="@isAuthenticating">
+                        Sign Up
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
     else
     {
         <header class="publish-header">
-            <h1 class="page-title">Submit a Book to the Library</h1>
-            <p class="lead-text">
-                Anyone can submit a book to Aviv Library. Upload your PDF file and fill out the metadata below.
-                Submissions are reviewed by the platform owner before being published publicly.
-            </p>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h1 class="page-title">Submit a Book to the Library</h1>
+                    <p class="lead-text">
+                        Upload your PDF file and fill out the metadata below.
+                        Submissions are reviewed by the platform owner before being published publicly.
+                    </p>
+                </div>
+                <div class="user-pill-dropdown" style="margin-top:4px;">
+                    <span class="user-email-pill" title="@Supabase.CurrentUser?.Email">
+                        👤 @Supabase.CurrentUser?.Email
+                    </span>
+                </div>
+            </div>
         </header>
 
         @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -253,19 +313,100 @@
     private bool submittedSuccessfully = false;
     private BookSubmission? latestSubmission;
 
-    private bool CanSubmit => !string.IsNullOrWhiteSpace(selectedFileName) &&
+    private string authEmail = "";
+    private string authPassword = "";
+    private bool isAuthenticating = false;
+    private string? loginError;
+
+    private bool CanSubmit => Supabase.IsAuthenticated &&
+                              !string.IsNullOrWhiteSpace(selectedFileName) &&
                               !string.IsNullOrWhiteSpace(formModel.Title) &&
                               agreedToGuidelines;
 
     protected override async Task OnInitializedAsync()
     {
+        Supabase.AuthStateChanged += OnAuthStateChanged;
         await Supabase.EnsureInitializedAsync();
-        if (Supabase.CurrentUser != null)
+        SyncSubmitterEmail();
+    }
+
+    private void OnAuthStateChanged()
+    {
+        SyncSubmitterEmail();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncSubmitterEmail()
+    {
+        if (Supabase.CurrentUser != null && string.IsNullOrWhiteSpace(formModel.SubmitterEmail))
         {
-            if (string.IsNullOrWhiteSpace(formModel.SubmitterEmail))
+            formModel.SubmitterEmail = Supabase.CurrentUser.Email;
+            if (string.IsNullOrWhiteSpace(formModel.SubmitterName))
             {
-                formModel.SubmitterEmail = Supabase.CurrentUser.Email;
+                formModel.SubmitterName = Supabase.CurrentUser.Email?.Split('@')[0] ?? "";
             }
+        }
+    }
+
+    private async Task HandleUserLogin()
+    {
+        isAuthenticating = true;
+        loginError = null;
+        try
+        {
+            var res = await Supabase.SignInAsync(authEmail.Trim(), authPassword);
+            if (!res.Success)
+            {
+                loginError = res.Error ?? "Login failed. Please check your credentials.";
+            }
+            else
+            {
+                authPassword = "";
+                SyncSubmitterEmail();
+            }
+        }
+        catch (Exception ex)
+        {
+            loginError = ex.Message;
+        }
+        finally
+        {
+            isAuthenticating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleUserSignUp()
+    {
+        if (string.IsNullOrWhiteSpace(authEmail) || string.IsNullOrWhiteSpace(authPassword))
+        {
+            loginError = "Please enter an email and password to sign up.";
+            return;
+        }
+
+        isAuthenticating = true;
+        loginError = null;
+        try
+        {
+            var res = await Supabase.SignUpAsync(authEmail.Trim(), authPassword);
+            if (!res.Success)
+            {
+                loginError = res.Error ?? "Sign up failed.";
+            }
+            else
+            {
+                authPassword = "";
+                SyncSubmitterEmail();
+            }
+        }
+        catch (Exception ex)
+        {
+            loginError = ex.Message;
+        }
+        finally
+        {
+            isAuthenticating = false;
+            StateHasChanged();
         }
     }
 
@@ -324,6 +465,8 @@
             formModel.PublicUrl = uploadRes.PublicUrl;
             formModel.FileSize = uploadRes.FileSize;
             formModel.Status = "pending";
+            formModel.SubmittedBy = Supabase.CurrentUser?.Id;
+            formModel.SubmitterEmail = Supabase.CurrentUser?.Email;
 
             var createRes = await Supabase.CreateSubmissionAsync(formModel);
             if (!createRes.Success || createRes.Submission == null)
@@ -352,11 +495,17 @@
         if (Supabase.CurrentUser != null)
         {
             formModel.SubmitterEmail = Supabase.CurrentUser.Email;
+            formModel.SubmitterName = Supabase.CurrentUser.Email?.Split('@')[0] ?? "";
         }
         selectedFileName = "";
         agreedToGuidelines = false;
         submittedSuccessfully = false;
         latestSubmission = null;
         errorMessage = null;
+    }
+
+    public void Dispose()
+    {
+        Supabase.AuthStateChanged -= OnAuthStateChanged;
     }
 }

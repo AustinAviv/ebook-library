@@ -43,6 +43,25 @@
                 storage: window.localStorage
             }
         });
+
+        // Listen for session changes to keep localStorage sync bulletproof
+        try {
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (session && session.user) {
+                    try {
+                        localStorage.setItem("aviv_user_session", JSON.stringify({
+                            id: session.user.id,
+                            email: session.user.email
+                        }));
+                    } catch { }
+                } else if (event === "SIGNED_OUT") {
+                    try {
+                        localStorage.removeItem("aviv_user_session");
+                    } catch { }
+                }
+            });
+        } catch { }
+
         return true;
     };
 
@@ -58,9 +77,14 @@
             if (error) {
                 let msg = error.message;
                 if (msg.toLowerCase().includes("signups not allowed")) {
-                    msg = "Signups are disabled in your Supabase project (under Authentication > Providers > Email). Anyone can still submit books as a guest without an account! If you are the platform owner, please use Sign In.";
+                    msg = "Signups are disabled in your Supabase project (under Authentication > Providers > Email). Please use Sign In with your existing account.";
                 }
                 return JSON.stringify({ success: false, error: msg });
+            }
+            if (data && data.user) {
+                try {
+                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email }));
+                } catch { }
             }
             return JSON.stringify({
                 success: true,
@@ -81,6 +105,11 @@
                 password: password
             });
             if (error) return JSON.stringify({ success: false, error: error.message });
+            if (data && data.user) {
+                try {
+                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email }));
+                } catch { }
+            }
             return JSON.stringify({
                 success: true,
                 user: data.user ? { id: data.user.id, email: data.user.email } : null
@@ -91,6 +120,9 @@
     };
 
     window.supabaseAuthSignOut = async function () {
+        try {
+            localStorage.removeItem("aviv_user_session");
+        } catch { }
         const client = getClient();
         if (!client) return true;
         try {
@@ -104,15 +136,51 @@
 
     window.supabaseAuthGetUser = async function () {
         const client = getClient();
-        if (!client) return null;
+        if (!client) {
+            // Check fallback cache while client initializes
+            try {
+                const cached = localStorage.getItem("aviv_user_session");
+                if (cached) return cached;
+            } catch { }
+            return null;
+        }
+
         try {
+            // 1. Check getSession first (fastest, reads from localStorage without network roundtrip)
+            const { data: sessionData } = await client.auth.getSession();
+            if (sessionData && sessionData.session && sessionData.session.user) {
+                const u = {
+                    id: sessionData.session.user.id,
+                    email: sessionData.session.user.email
+                };
+                try {
+                    localStorage.setItem("aviv_user_session", JSON.stringify(u));
+                } catch { }
+                return JSON.stringify(u);
+            }
+
+            // 2. Network verification
             const { data, error } = await client.auth.getUser();
-            if (error || !data || !data.user) return null;
-            return JSON.stringify({
-                id: data.user.id,
-                email: data.user.email
-            });
+            if (!error && data && data.user) {
+                const u = {
+                    id: data.user.id,
+                    email: data.user.email
+                };
+                try {
+                    localStorage.setItem("aviv_user_session", JSON.stringify(u));
+                } catch { }
+                return JSON.stringify(u);
+            }
+
+            // 3. Fallback to cached session
+            try {
+                return localStorage.getItem("aviv_user_session");
+            } catch { }
+            return null;
         } catch {
+            try {
+                return localStorage.getItem("aviv_user_session");
+            } catch { }
             return null;
         }
     };

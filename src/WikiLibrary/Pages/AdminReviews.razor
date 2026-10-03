@@ -12,7 +12,14 @@
         <span class="crumb-current">Platform Owner Review</span>
     </nav>
 
-    @if (!Supabase.IsOwner)
+    @if (!Supabase.IsInitialized)
+    {
+        <div class="submissions-loading" style="padding:60px 20px;text-align:center;">
+            <div class="loader-spinner"></div>
+            <p class="muted" style="margin-top:16px;">Verifying owner session...</p>
+        </div>
+    }
+    else if (!Supabase.IsOwner)
     {
         <div class="owner-auth-card">
             <div class="lock-icon-box">
