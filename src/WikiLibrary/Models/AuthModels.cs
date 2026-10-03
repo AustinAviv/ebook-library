@@ -25,6 +25,9 @@ public class SupabaseUser
     [JsonPropertyName("role")]
     public string Role { get; set; } = "user";
 
+    [JsonPropertyName("uid")]
+    public string? Uid { get; set; }
+
     public bool IsOwner => string.Equals(Role, "owner", StringComparison.OrdinalIgnoreCase) ||
                            string.Equals(Role, "admin", StringComparison.OrdinalIgnoreCase);
 }

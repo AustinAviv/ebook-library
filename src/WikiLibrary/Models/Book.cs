@@ -15,6 +15,8 @@ public class Book
     public string? Url { get; set; }
     public string? DownloadUrl { get; set; }
     public bool IsCommunityPublished { get; set; }
+    public string? StorageFilePath { get; set; }
+    public long? SubmissionId { get; set; }
 
     public bool HasAuthor => !string.IsNullOrWhiteSpace(Author) && !Author.Equals("Unknown author", StringComparison.OrdinalIgnoreCase);
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category) && !Category.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase);

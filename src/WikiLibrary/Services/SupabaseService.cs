@@ -262,4 +262,47 @@ public class SupabaseService
             return new List<BookSubmission>();
         }
     }
+
+    public async Task<List<int>> GetRemovedCatalogBooksAsync()
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseGetRemovedCatalogBooks");
+            return JsonSerializer.Deserialize<List<int>>(raw, JsonOptions) ?? new List<int>();
+        }
+        catch
+        {
+            return new List<int>();
+        }
+    }
+
+    public async Task<bool> RemoveCoreCatalogBookAsync(int bookId)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseRemoveCoreCatalogBook", bookId);
+            var result = JsonSerializer.Deserialize<SubmissionOperationResult>(raw, JsonOptions);
+            return result?.Success ?? false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] RemoveCoreCatalogBook error: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveCommunityBookAsync(long submissionId, string? filePath)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseDeleteCommunityBook", submissionId, filePath);
+            var result = JsonSerializer.Deserialize<SubmissionOperationResult>(raw, JsonOptions);
+            return result?.Success ?? false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] RemoveCommunityBook error: {ex.Message}");
+            return false;
+        }
+    }
 }

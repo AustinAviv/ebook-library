@@ -82,9 +82,16 @@ public class BookService
                 var rawJson = await _http.GetStringAsync("data/books.json");
                 var books = JsonSerializer.Deserialize<List<Book>>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
 
+                await _supabase.EnsureInitializedAsync();
+                var removedIds = await _supabase.GetRemovedCatalogBooksAsync();
+                if (removedIds != null && removedIds.Count > 0)
+                {
+                    var removedSet = new HashSet<int>(removedIds);
+                    books = books.Where(b => !removedSet.Contains(b.Id)).ToList();
+                }
+
                 ApplyBooks(books);
 
-                // Fetch live community accepted books from Supabase before declaring loaded
                 await RefreshCommunityBooksAsync();
 
                 IsLoaded = true;
@@ -154,7 +161,9 @@ public class BookService
                     FileSize = sub.FileSize,
                     Url = sub.PublicUrl,
                     DownloadUrl = sub.PublicUrl,
-                    IsCommunityPublished = true
+                    IsCommunityPublished = true,
+                    StorageFilePath = sub.FilePath,
+                    SubmissionId = sub.Id
                 };
                 existingList.Add(book);
                 changed = true;
@@ -165,6 +174,17 @@ public class BookService
         {
             ApplyBooks(existingList);
             LoadedChanged?.Invoke();
+        }
+    }
+
+    public void RemoveBook(int bookId)
+    {
+        if (_byId.Remove(bookId, out _))
+        {
+            var updatedList = _sorted.Where(b => b.Id != bookId).ToList();
+            ApplyBooks(updatedList);
+            LoadedChanged?.Invoke();
+            StatsChanged?.Invoke();
         }
     }
 

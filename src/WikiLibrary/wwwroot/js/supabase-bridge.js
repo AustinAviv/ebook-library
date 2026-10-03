@@ -44,16 +44,16 @@
             }
         });
 
-        // Listen for session changes to keep localStorage sync bulletproof
         try {
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 if (session && session.user) {
                     try {
-                        const r = await getUserRole(session.user.id);
+                        const meta = await getUserRole(session.user.id);
                         localStorage.setItem("aviv_user_session", JSON.stringify({
                             id: session.user.id,
                             email: session.user.email,
-                            role: r
+                            role: meta.role,
+                            uid: meta.uid
                         }));
                     } catch { }
                 } else if (event === "SIGNED_OUT") {
@@ -67,26 +67,27 @@
         return true;
     };
 
-    // Helper: fetch user role from database table user_roles
     async function getUserRole(userId) {
-        if (!userId) return "user";
+        if (!userId) return { role: "user", uid: "" };
         try {
             const client = getClient();
-            if (!client) return "user";
+            if (!client) return { role: "user", uid: "" };
             const { data, error } = await client
                 .from("user_roles")
-                .select("role")
+                .select("role, uid")
                 .eq("user_id", userId)
                 .maybeSingle();
 
-            if (error || !data) return "user";
-            return data.role || "user";
+            if (error || !data) return { role: "user", uid: "" };
+            return {
+                role: data.role || "user",
+                uid: data.uid || ""
+            };
         } catch {
-            return "user";
+            return { role: "user", uid: "" };
         }
     }
 
-    // Auth methods
     window.supabaseAuthSignUp = async function (email, password) {
         const client = getClient();
         if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
@@ -98,20 +99,28 @@
             if (error) {
                 let msg = error.message;
                 if (msg.toLowerCase().includes("signups not allowed")) {
-                    msg = "Signups are disabled in your Supabase project (under Authentication > Providers > Email). Please use Sign In with your existing account.";
+                    msg = "Signups are disabled in your Supabase project configuration. Please sign in with an existing account.";
                 }
                 return JSON.stringify({ success: false, error: msg });
             }
             let role = "user";
+            let uid = "";
             if (data && data.user) {
-                role = await getUserRole(data.user.id);
+                const meta = await getUserRole(data.user.id);
+                role = meta.role;
+                uid = meta.uid;
                 try {
-                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email, role: role }));
+                    localStorage.setItem("aviv_user_session", JSON.stringify({
+                        id: data.user.id,
+                        email: data.user.email,
+                        role: role,
+                        uid: uid
+                    }));
                 } catch { }
             }
             return JSON.stringify({
                 success: true,
-                user: data.user ? { id: data.user.id, email: data.user.email, role: role } : null,
+                user: data.user ? { id: data.user.id, email: data.user.email, role: role, uid: uid } : null,
                 session: data.session ? true : false
             });
         } catch (err) {
@@ -129,15 +138,23 @@
             });
             if (error) return JSON.stringify({ success: false, error: error.message });
             let role = "user";
+            let uid = "";
             if (data && data.user) {
-                role = await getUserRole(data.user.id);
+                const meta = await getUserRole(data.user.id);
+                role = meta.role;
+                uid = meta.uid;
                 try {
-                    localStorage.setItem("aviv_user_session", JSON.stringify({ id: data.user.id, email: data.user.email, role: role }));
+                    localStorage.setItem("aviv_user_session", JSON.stringify({
+                        id: data.user.id,
+                        email: data.user.email,
+                        role: role,
+                        uid: uid
+                    }));
                 } catch { }
             }
             return JSON.stringify({
                 success: true,
-                user: data.user ? { id: data.user.id, email: data.user.email, role: role } : null
+                user: data.user ? { id: data.user.id, email: data.user.email, role: role, uid: uid } : null
             });
         } catch (err) {
             return JSON.stringify({ success: false, error: err.message || String(err) });
@@ -162,7 +179,6 @@
     window.supabaseAuthGetUser = async function () {
         const client = getClient();
         if (!client) {
-            // Check fallback cache while client initializes
             try {
                 const cached = localStorage.getItem("aviv_user_session");
                 if (cached) return cached;
@@ -171,15 +187,15 @@
         }
 
         try {
-            // 1. Check getSession first (fastest, reads from localStorage without network roundtrip)
             const { data: sessionData } = await client.auth.getSession();
             if (sessionData && sessionData.session && sessionData.session.user) {
                 const user = sessionData.session.user;
-                const role = await getUserRole(user.id);
+                const meta = await getUserRole(user.id);
                 const u = {
                     id: user.id,
                     email: user.email,
-                    role: role
+                    role: meta.role,
+                    uid: meta.uid
                 };
                 try {
                     localStorage.setItem("aviv_user_session", JSON.stringify(u));
@@ -187,15 +203,15 @@
                 return JSON.stringify(u);
             }
 
-            // 2. Network verification
             const { data, error } = await client.auth.getUser();
             if (!error && data && data.user) {
                 const user = data.user;
-                const role = await getUserRole(user.id);
+                const meta = await getUserRole(user.id);
                 const u = {
                     id: user.id,
                     email: user.email,
-                    role: role
+                    role: meta.role,
+                    uid: meta.uid
                 };
                 try {
                     localStorage.setItem("aviv_user_session", JSON.stringify(u));
@@ -203,7 +219,6 @@
                 return JSON.stringify(u);
             }
 
-            // 3. Fallback to cached session
             try {
                 return localStorage.getItem("aviv_user_session");
             } catch { }
@@ -216,7 +231,7 @@
         }
     };
 
-    // Direct Browser-to-Supabase Storage Upload
+    // Supabase Storage Upload
     window.supabaseUploadBookFile = async function (inputId, sanitizedFileName) {
         const client = getClient();
         if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
@@ -231,13 +246,11 @@
             return JSON.stringify({ success: false, error: "Selected file must be a PDF document (.pdf)." });
         }
 
-        // 50 MB limit
         const maxBytes = 50 * 1024 * 1024;
         if (file.size > maxBytes) {
             return JSON.stringify({ success: false, error: "File exceeds 50 MB maximum limit." });
         }
 
-        // Clean up filename and strip any C:\fakepath\ or directories
         const rawName = sanitizedFileName || file.name || "book.pdf";
         const baseName = rawName.split(/[\\/]/).pop() || "book.pdf";
         const cleanName = baseName
@@ -280,14 +293,12 @@
         }
     };
 
-    // Delete PDF from Supabase Storage (frees storage space upon rejection)
     window.supabaseDeleteBookFile = async function (filePath) {
         const client = getClient();
         if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
         if (!filePath || filePath.trim().length === 0) return JSON.stringify({ success: true });
 
         try {
-            console.log(`[SupabaseBridge] Deleting storage file to save space: ${filePath}`);
             const { data, error } = await client.storage
                 .from(STORAGE_BUCKET)
                 .remove([filePath.trim()]);
@@ -297,7 +308,6 @@
                 return JSON.stringify({ success: false, error: error.message });
             }
 
-            console.log(`[SupabaseBridge] Storage file deleted successfully: ${filePath}`);
             return JSON.stringify({ success: true });
         } catch (err) {
             console.warn("[SupabaseBridge] Exception removing storage file:", err);
@@ -305,7 +315,7 @@
         }
     };
 
-    // Database: Submissions
+    // Submissions Management
     window.supabaseCreateSubmission = async function (payloadJson) {
         const client = getClient();
         if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
@@ -313,15 +323,12 @@
         try {
             const payload = JSON.parse(payloadJson);
 
-            // Attempt insert with .select() to get generated database row
             const insertResult = await client
                 .from("book_submissions")
                 .insert([payload])
                 .select();
 
             if (insertResult.error) {
-                console.warn("[SupabaseBridge] Insert with select returned:", insertResult.error.message, "Retrying with standard insert...");
-                // Resilient fallback: If SELECT is blocked by RLS for guest users, execute standard insert
                 const fallbackResult = await client
                     .from("book_submissions")
                     .insert([payload]);
@@ -410,11 +417,9 @@
             if (newStatus === "rejected") {
                 updatePayload.rejection_reason = rejectionReason || "Does not meet publishing guidelines.";
 
-                // Automatically delete rejected PDF from Supabase Storage to reclaim space!
                 const fileToDelete = filePath;
                 if (fileToDelete && fileToDelete.trim().length > 0) {
                     try {
-                        console.log(`[SupabaseBridge] Rejection: deleting file ${fileToDelete} from storage to save space...`);
                         await client.storage.from(STORAGE_BUCKET).remove([fileToDelete.trim()]);
                         updatePayload.file_path = "";
                         updatePayload.public_url = "";
@@ -426,8 +431,6 @@
                 updatePayload.rejection_reason = null;
             }
 
-            console.log(`[SupabaseBridge] Updating submission ${id} to ${newStatus}...`);
-
             const { data, error } = await client
                 .from("book_submissions")
                 .update(updatePayload)
@@ -438,22 +441,20 @@
                 console.error("[SupabaseBridge] Error updating submission:", error);
                 let msg = error.message || error.details || "Update failed.";
                 if (msg.includes("infinite recursion") || msg.includes("42P17")) {
-                    msg = "Database policy error (infinite recursion in app_admins). Please run the updated supabase-setup.sql in your Supabase SQL Editor.";
+                    msg = "Database policy error. Please run the updated supabase-setup.sql in your Supabase SQL Editor.";
                 } else if (msg.toLowerCase().includes("row-level security") || msg.toLowerCase().includes("permission denied")) {
-                    msg = "Permission denied. Ensure you are signed in as the platform owner and have run supabase-setup.sql.";
+                    msg = "Permission denied. Ensure you are signed in as the platform owner.";
                 }
                 return JSON.stringify({ success: false, error: msg });
             }
 
             if (!data || data.length === 0) {
-                console.warn("[SupabaseBridge] Update returned 0 rows. RLS policy likely prevented the update.");
                 return JSON.stringify({
                     success: false,
-                    error: "Update permission denied: 0 rows modified. Please ensure you ran the latest supabase-setup.sql in Supabase SQL editor and are signed in as the platform owner."
+                    error: "Update permission denied: 0 rows modified. Please ensure you are signed in with the owner role."
                 });
             }
 
-            console.log(`[SupabaseBridge] Submission ${id} updated successfully:`, data[0]);
             return JSON.stringify({
                 success: true,
                 submission: data[0]
@@ -464,7 +465,7 @@
         }
     };
 
-    // Public Accepted Books (to dynamically merge into BookService in-memory catalog)
+    // Public Accepted Books Query
     window.supabaseGetAcceptedBooks = async function () {
         const client = getClient();
         if (!client) return JSON.stringify([]);
@@ -472,7 +473,7 @@
         try {
             const { data, error } = await client
                 .from("book_submissions")
-                .select("id, title, author, description, category, year, language, pages, file_size, public_url, created_at")
+                .select("id, title, author, description, category, year, language, pages, file_size, file_path, public_url, created_at")
                 .eq("status", "accepted")
                 .order("id", { ascending: false });
 
@@ -484,6 +485,77 @@
         } catch (err) {
             console.warn("[SupabaseBridge] Failed to load accepted books:", err);
             return JSON.stringify([]);
+        }
+    };
+
+    // Catalog Management: Removed Core Books
+    window.supabaseGetRemovedCatalogBooks = async function () {
+        const client = getClient();
+        if (!client) return JSON.stringify([]);
+        try {
+            const { data, error } = await client
+                .from("removed_catalog_books")
+                .select("book_id");
+
+            if (error || !data) return JSON.stringify([]);
+            return JSON.stringify(data.map(r => r.book_id));
+        } catch {
+            return JSON.stringify([]);
+        }
+    };
+
+    window.supabaseRemoveCoreCatalogBook = async function (bookId) {
+        const client = getClient();
+        if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
+        try {
+            const { error } = await client
+                .from("removed_catalog_books")
+                .upsert([{ book_id: bookId }]);
+
+            if (error) return JSON.stringify({ success: false, error: error.message });
+            return JSON.stringify({ success: true });
+        } catch (err) {
+            return JSON.stringify({ success: false, error: err.message || String(err) });
+        }
+    };
+
+    // Catalog Management: Permanent Community Book Deletion (Storage File + Database Row)
+    window.supabaseDeleteCommunityBook = async function (submissionId, filePath) {
+        const client = getClient();
+        if (!client) return JSON.stringify({ success: false, error: "Supabase not initialized." });
+        try {
+            let pathToDelete = filePath;
+            if (!pathToDelete && submissionId) {
+                const { data } = await client
+                    .from("book_submissions")
+                    .select("file_path")
+                    .eq("id", submissionId)
+                    .maybeSingle();
+                if (data && data.file_path) {
+                    pathToDelete = data.file_path;
+                }
+            }
+
+            if (pathToDelete && pathToDelete.trim().length > 0) {
+                try {
+                    await client.storage.from(STORAGE_BUCKET).remove([pathToDelete.trim()]);
+                } catch (storageErr) {
+                    console.warn("[SupabaseBridge] Storage removal warning:", storageErr);
+                }
+            }
+
+            const { error } = await client
+                .from("book_submissions")
+                .delete()
+                .eq("id", submissionId);
+
+            if (error) {
+                return JSON.stringify({ success: false, error: error.message });
+            }
+
+            return JSON.stringify({ success: true });
+        } catch (err) {
+            return JSON.stringify({ success: false, error: err.message || String(err) });
         }
     };
 })();

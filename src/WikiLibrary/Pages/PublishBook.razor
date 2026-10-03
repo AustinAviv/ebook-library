@@ -137,8 +137,16 @@
                     </p>
                 </div>
                 <div class="user-pill-dropdown" style="margin-top:4px;">
-                    <span class="user-email-pill" title="@Supabase.CurrentUser?.Email">
-                        👤 @Supabase.CurrentUser?.Email
+                    <span class="user-email-pill" title="@Supabase.CurrentUser?.Email" style="display:inline-flex;align-items:center;gap:6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>@Supabase.CurrentUser?.Email</span>
+                        @if (!string.IsNullOrWhiteSpace(Supabase.CurrentUser?.Uid))
+                        {
+                            <span class="user-uid-code">#@Supabase.CurrentUser.Uid</span>
+                        }
                     </span>
                 </div>
             </div>

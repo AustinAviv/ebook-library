@@ -3,13 +3,13 @@
 @inject NavigationManager Nav
 @inject BookService Books
 
-<PageTitle>Platform Owner Review Portal - Aviv Library</PageTitle>
+<PageTitle>Platform Owner Management Portal - Aviv Library</PageTitle>
 
 <div class="admin-portal-wrapper">
     <nav class="book-breadcrumb">
         <a href="/">← Library</a>
         <span class="crumb-separator">/</span>
-        <span class="crumb-current">Platform Owner Review</span>
+        <span class="crumb-current">Owner Administration</span>
     </nav>
 
     @if (!Supabase.IsInitialized)
@@ -38,13 +38,18 @@
                 <div class="auth-alert error" style="margin-top:16px;">
                     Signed in as <strong>@Supabase.CurrentUser?.Email</strong> (Role: <code>@Supabase.CurrentUser?.Role</code>).
                     This account is not designated as an owner in the database.
-                    <div style="margin-top:10px;font-size:0.8125rem;line-height:1.5;color:var(--text-default);">
-                        💡 <strong>How to activate owner access:</strong> In your Supabase Dashboard, open <strong>Table Editor &gt; user_roles</strong>, find your user, set <code>role = 'owner'</code>, and click the button below!
+                    <div style="margin-top:10px;font-size:0.8125rem;line-height:1.5;color:var(--text-default);display:flex;align-items:flex-start;gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <span><strong>Access Configuration:</strong> In your Supabase Dashboard, open <strong>Table Editor &gt; user_roles</strong>, find your user, set <code>role = 'owner'</code>, and refresh.</span>
                     </div>
                 </div>
                 <div style="display:flex;gap:10px;margin-top:14px;">
                     <button type="button" class="btn-action-primary btn-sm" @onclick="CheckOwnerRole" disabled="@isLoading">
-                        @(isLoading ? "Checking Role..." : "🔄 Check Role Again")
+                        @(isLoading ? "Checking Role..." : "Refresh Role Status")
                     </button>
                     <button type="button" class="btn-action-secondary btn-sm" @onclick="Supabase.SignOutAsync">Sign Out</button>
                 </div>
@@ -70,7 +75,7 @@
                     </div>
 
                     <button type="submit" class="btn-action-primary w-full" disabled="@isLoggingIn" style="margin-top:12px;">
-                        @(isLoggingIn ? "Signing In..." : "Sign In to Review Portal")
+                        @(isLoggingIn ? "Signing In..." : "Sign In to Management Portal")
                     </button>
                 </form>
             }
@@ -80,7 +85,7 @@
     {
         <header class="admin-header">
             <div>
-                <h1 class="page-title">Platform Owner Review Portal</h1>
+                <h1 class="page-title">Platform Owner Portal</h1>
                 <p class="muted">Review pending submissions, inspect book PDFs, and manage catalog publication.</p>
             </div>
             <div class="admin-header-actions">
@@ -88,7 +93,11 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                     </svg>
-                    👑 Role: <strong>@Supabase.CurrentUser?.Role.ToUpperInvariant()</strong> (@Supabase.CurrentUser?.Email)
+                    <span>Owner: <strong>@Supabase.CurrentUser?.Email</strong></span>
+                    @if (!string.IsNullOrWhiteSpace(Supabase.CurrentUser?.Uid))
+                    {
+                        <span class="user-uid-code">UID: #@Supabase.CurrentUser.Uid</span>
+                    }
                 </span>
                 <button type="button" class="btn-action-secondary btn-sm" @onclick="RefreshSubmissions" disabled="@isLoading">
                     @(isLoading ? "Refreshing..." : "Refresh")
@@ -121,121 +130,266 @@
             </div>
         }
 
-        <!-- Stats Overview Bar -->
-        <div class="admin-stats-grid">
-            <button type="button" class="admin-stat-card @(activeTab == "pending" ? "selected" : "")" @onclick='@(() => SetTab("pending"))'>
-                <span class="stat-num pending-num">@submissions.Count(s => s.IsPending)</span>
-                <span class="stat-label">Pending Review</span>
+        <div class="owner-view-tabs">
+            <button type="button" class="owner-view-tab @(currentPortalView == "submissions" ? "active" : "")" @onclick='() => currentPortalView = "submissions"'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>Submissions Review</span>
+                @if (submissions.Count(s => s.IsPending) > 0)
+                {
+                    <span class="owner-tab-badge" style="background:#d97706;color:#ffffff;">@submissions.Count(s => s.IsPending) pending</span>
+                }
             </button>
-            <button type="button" class="admin-stat-card @(activeTab == "accepted" ? "selected" : "")" @onclick='@(() => SetTab("accepted"))'>
-                <span class="stat-num accepted-num">@submissions.Count(s => s.IsAccepted)</span>
-                <span class="stat-label">Accepted & Published</span>
-            </button>
-            <button type="button" class="admin-stat-card @(activeTab == "rejected" ? "selected" : "")" @onclick='@(() => SetTab("rejected"))'>
-                <span class="stat-num rejected-num">@submissions.Count(s => s.IsRejected)</span>
-                <span class="stat-label">Rejected</span>
-            </button>
-            <button type="button" class="admin-stat-card @(activeTab == "all" ? "selected" : "")" @onclick='@(() => SetTab("all"))'>
-                <span class="stat-num">@submissions.Count</span>
-                <span class="stat-label">Total Submissions</span>
+
+            <button type="button" class="owner-view-tab @(currentPortalView == "catalog" ? "active" : "")" @onclick='() => currentPortalView = "catalog"'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Master Catalog Index</span>
+                <span class="owner-tab-badge">@Books.Count</span>
             </button>
         </div>
 
-        <!-- Filtered Submissions List -->
-        @if (isLoading)
+        @if (currentPortalView == "submissions")
         {
-            <div class="submissions-loading">
-                <div class="loader-spinner"></div>
-                <p class="muted">Loading submissions...</p>
+            <div class="admin-stats-grid">
+                <button type="button" class="admin-stat-card @(activeTab == "pending" ? "selected" : "")" @onclick='@(() => SetTab("pending"))'>
+                    <span class="stat-num pending-num">@submissions.Count(s => s.IsPending)</span>
+                    <span class="stat-label">Pending Review</span>
+                </button>
+                <button type="button" class="admin-stat-card @(activeTab == "accepted" ? "selected" : "")" @onclick='@(() => SetTab("accepted"))'>
+                    <span class="stat-num accepted-num">@submissions.Count(s => s.IsAccepted)</span>
+                    <span class="stat-label">Accepted & Published</span>
+                </button>
+                <button type="button" class="admin-stat-card @(activeTab == "rejected" ? "selected" : "")" @onclick='@(() => SetTab("rejected"))'>
+                    <span class="stat-num rejected-num">@submissions.Count(s => s.IsRejected)</span>
+                    <span class="stat-label">Rejected</span>
+                </button>
+                <button type="button" class="admin-stat-card @(activeTab == "all" ? "selected" : "")" @onclick='@(() => SetTab("all"))'>
+                    <span class="stat-num">@submissions.Count</span>
+                    <span class="stat-label">Total Submissions</span>
+                </button>
             </div>
-        }
-        else if (filteredSubmissions.Count == 0)
-        {
-            <div class="empty-submissions-card">
-                <p class="muted">No submissions found in this category.</p>
-            </div>
-        }
-        else
-        {
-            <div class="admin-submissions-grid">
-                @foreach (var book in filteredSubmissions)
-                {
-                    <div class="admin-book-card @book.StatusBadgeClass">
-                        <div class="admin-book-header">
-                            <div>
-                                <h3 class="admin-book-title">@book.Title</h3>
-                                <span class="admin-book-author">by @(string.IsNullOrWhiteSpace(book.Author) ? "Unknown Author" : book.Author)</span>
-                            </div>
-                            <span class="submission-status-pill @book.StatusBadgeClass">
-                                @book.StatusDisplayName
-                            </span>
-                        </div>
 
-                        <div class="admin-book-info-grid">
-                            <div><span class="info-k">Category:</span> <span class="info-v">@book.Category</span></div>
-                            <div><span class="info-k">Year:</span> <span class="info-v">@(book.Year > 0 ? book.Year.ToString() : "-")</span></div>
-                            <div><span class="info-k">Language:</span> <span class="info-v">@book.Language</span></div>
-                            <div><span class="info-k">File Size:</span> <span class="info-v">@book.FileSizeText</span></div>
-                            <div><span class="info-k">Submitter:</span> <span class="info-v">@(string.IsNullOrWhiteSpace(book.SubmitterName) ? "Anonymous" : book.SubmitterName)</span></div>
-                            <div><span class="info-k">Email:</span> <span class="info-v">@(string.IsNullOrWhiteSpace(book.SubmitterEmail) ? "-" : book.SubmitterEmail)</span></div>
-                        </div>
-
-                        @if (!string.IsNullOrWhiteSpace(book.Description))
-                        {
-                            <div class="admin-book-desc">
-                                <span class="info-k">Description:</span>
-                                <p>@book.Description</p>
-                            </div>
-                        }
-
-                        @if (book.IsRejected && !string.IsNullOrWhiteSpace(book.RejectionReason))
-                        {
-                            <div class="admin-rejection-box">
-                                <strong>Rejection Reason:</strong>
-                                <p>@book.RejectionReason</p>
-                            </div>
-                        }
-
-                        <!-- Action Toolbar -->
-                        <div class="admin-book-actions">
-                            @if (!string.IsNullOrWhiteSpace(book.PublicUrl) && !book.IsRejected)
-                            {
-                                <button type="button" class="btn-action-secondary btn-sm" @onclick="() => OpenPreview(book)">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    <span>Preview PDF</span>
-                                </button>
-                            }
-                            else if (book.IsRejected)
-                            {
-                                <span class="muted" style="font-size:0.8125rem;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-default);border-radius:6px;">
-                                    <span>🗑️ PDF purged from storage</span>
+            @if (isLoading)
+            {
+                <div class="submissions-loading">
+                    <div class="loader-spinner"></div>
+                    <p class="muted">Loading submissions...</p>
+                </div>
+            }
+            else if (filteredSubmissions.Count == 0)
+            {
+                <div class="empty-submissions-card">
+                    <p class="muted">No submissions found in this category.</p>
+                </div>
+            }
+            else
+            {
+                <div class="admin-submissions-grid">
+                    @foreach (var book in filteredSubmissions)
+                    {
+                        <div class="admin-book-card @book.StatusBadgeClass">
+                            <div class="admin-book-header">
+                                <div>
+                                    <h3 class="admin-book-title">@book.Title</h3>
+                                    <span class="admin-book-author">by @(string.IsNullOrWhiteSpace(book.Author) ? "Unknown Author" : book.Author)</span>
+                                </div>
+                                <span class="submission-status-pill @book.StatusBadgeClass">
+                                    @book.StatusDisplayName
                                 </span>
+                            </div>
+
+                            <div class="admin-book-info-grid">
+                                <div><span class="info-k">Category:</span> <span class="info-v">@book.Category</span></div>
+                                <div><span class="info-k">Year:</span> <span class="info-v">@(book.Year > 0 ? book.Year.ToString() : "-")</span></div>
+                                <div><span class="info-k">Language:</span> <span class="info-v">@book.Language</span></div>
+                                <div><span class="info-k">File Size:</span> <span class="info-v">@book.FileSizeText</span></div>
+                                <div><span class="info-k">Submitter:</span> <span class="info-v">@(string.IsNullOrWhiteSpace(book.SubmitterName) ? "Anonymous" : book.SubmitterName)</span></div>
+                                <div><span class="info-k">Email:</span> <span class="info-v">@(string.IsNullOrWhiteSpace(book.SubmitterEmail) ? "-" : book.SubmitterEmail)</span></div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(book.Description))
+                            {
+                                <div class="admin-book-desc">
+                                    <span class="info-k">Description:</span>
+                                    <p>@book.Description</p>
+                                </div>
                             }
 
-                            @if (book.IsPending)
+                            @if (book.IsRejected && !string.IsNullOrWhiteSpace(book.RejectionReason))
                             {
-                                <button type="button" class="btn-accept btn-sm" @onclick="() => AcceptBook(book)" disabled="@isProcessing">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                    <span>Accept & Publish</span>
-                                </button>
+                                <div class="admin-rejection-box">
+                                    <strong>Rejection Reason:</strong>
+                                    <p>@book.RejectionReason</p>
+                                </div>
                             }
 
-                            @if (book.IsPending || book.IsAccepted)
-                            {
-                                <button type="button" class="btn-reject btn-sm" @onclick="() => OpenRejectModal(book)" disabled="@isProcessing">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                    <span>Reject & Delete PDF</span>
-                                </button>
-                            }
+                            <div class="admin-book-actions">
+                                @if (!string.IsNullOrWhiteSpace(book.PublicUrl) && !book.IsRejected)
+                                {
+                                    <button type="button" class="btn-action-secondary btn-sm" @onclick="() => OpenPreview(book)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span>Preview PDF</span>
+                                    </button>
+                                }
+                                else if (book.IsRejected)
+                                {
+                                    <span class="muted" style="font-size:0.8125rem;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-default);border-radius:6px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                        <span>Storage file deleted</span>
+                                    </span>
+                                }
+
+                                @if (book.IsPending)
+                                {
+                                    <button type="button" class="btn-accept btn-sm" @onclick="() => AcceptBook(book)" disabled="@isProcessing">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Accept & Publish</span>
+                                    </button>
+
+                                    <button type="button" class="btn-reject btn-sm" @onclick="() => OpenRejectModal(book)" disabled="@isProcessing">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        <span>Reject & Delete PDF</span>
+                                    </button>
+                                }
+                            </div>
                         </div>
+                    }
+                </div>
+            }
+        }
+        else if (currentPortalView == "catalog")
+        {
+            <div class="catalog-management-card">
+                <div class="catalog-management-header">
+                    <div>
+                        <h2 style="margin:0;font-size:1.25rem;">Total Catalog Index (@filteredCatalogBooks.Count of @Books.Count)</h2>
+                        <p class="muted" style="margin:4px 0 0;font-size:0.875rem;">
+                            Live index of all published books on the website. Removing any community book permanently purges its PDF file from storage.
+                        </p>
+                    </div>
+
+                    <div class="catalog-search-row">
+                        <input type="search" class="form-input" placeholder="Search catalog by title, author, or category..."
+                               @bind="catalogSearchQuery" @bind:event="oninput" style="flex:1;" />
+
+                        <select class="form-select" @bind="catalogSourceFilter" style="width:160px;">
+                            <option value="all">All Sources (@Books.Count)</option>
+                            <option value="community">Community (@Books.All.Count(b => b.IsCommunityPublished))</option>
+                            <option value="core">Core Archive (@Books.All.Count(b => !b.IsCommunityPublished))</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (filteredCatalogBooks.Count == 0)
+                {
+                    <div class="catalog-empty">
+                        <p>No books found matching the current search criteria.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="catalog-table-container">
+                        <table class="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;">ID</th>
+                                    <th>Title & Author</th>
+                                    <th>Category</th>
+                                    <th>Year / Lang</th>
+                                    <th>Source</th>
+                                    <th>File Size</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var b in filteredCatalogBooks)
+                                {
+                                    <tr>
+                                        <td><code>#@b.Id</code></td>
+                                        <td>
+                                            <strong style="color:var(--text-primary);display:block;">@b.Title</strong>
+                                            <span class="muted" style="font-size:0.8125rem;">@(b.HasAuthor ? b.Author : "Unknown Author")</span>
+                                        </td>
+                                        <td>
+                                            <span style="font-size:0.8125rem;">@(b.HasCategory ? b.Category : "General")</span>
+                                        </td>
+                                        <td>
+                                            <span style="font-size:0.8125rem;">@b.YearText • @(string.IsNullOrWhiteSpace(b.Language) ? "English" : b.Language)</span>
+                                        </td>
+                                        <td>
+                                            @if (b.IsCommunityPublished)
+                                            {
+                                                <span class="catalog-source-pill community">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                        <circle cx="9" cy="7" r="4"></circle>
+                                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                                    </svg>
+                                                    <span>Community</span>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="catalog-source-pill core">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                                                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                                                    </svg>
+                                                    <span>Core Archive</span>
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span style="font-size:0.8125rem;">@b.FileSizeText</span>
+                                        </td>
+                                        <td style="text-align:right;white-space:nowrap;">
+                                            <div style="display:inline-flex;gap:8px;align-items:center;">
+                                                <a href="/book/@b.Id" target="_blank" class="btn-action-secondary btn-sm" title="View details and read book">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                        <circle cx="12" cy="12" r="3"></circle>
+                                                    </svg>
+                                                    <span>View</span>
+                                                </a>
+
+                                                <button type="button" class="btn-remove-danger btn-sm" @onclick="() => PromptRemoveBook(b)" disabled="@isProcessing" title="Remove book from library catalog">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    </svg>
+                                                    <span>Remove</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 }
             </div>
@@ -243,7 +397,6 @@
     }
 </div>
 
-<!-- PDF Preview Modal -->
 @if (previewBook != null)
 {
     <div class="modal-backdrop" @onclick="ClosePreview">
@@ -265,7 +418,6 @@
     </div>
 }
 
-<!-- Reject Modal -->
 @if (rejectBookTarget != null)
 {
     <div class="modal-backdrop" @onclick="CloseRejectModal">
@@ -278,7 +430,10 @@
                 <p class="muted">Please provide a reason for rejecting this submission. The submitter will be able to see this reason in their dashboard.</p>
 
                 <div style="margin-top:10px;padding:10px 14px;font-size:0.8125rem;background:rgba(239, 68, 68, 0.08);border:1px solid rgba(239, 68, 68, 0.25);border-radius:6px;color:var(--text-default);display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:1.1rem;">🗑️</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                     <span><strong>Storage Cleanup:</strong> Confirming rejection will permanently delete this PDF document from Supabase Storage to free up space.</span>
                 </div>
 
@@ -310,6 +465,56 @@
     </div>
 }
 
+@if (bookToRemove != null)
+{
+    <div class="modal-backdrop" @onclick="CloseRemoveModal">
+        <div class="modal-card" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>Remove Book: @bookToRemove.Title</h3>
+                <button type="button" class="modal-close-btn" @onclick="CloseRemoveModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove <strong>@bookToRemove.Title</strong> by @(bookToRemove.HasAuthor ? bookToRemove.Author : "Unknown Author") from the library catalog?</p>
+
+                @if (bookToRemove.IsCommunityPublished)
+                {
+                    <div style="margin-top:12px;padding:12px 14px;font-size:0.8125rem;background:rgba(239, 68, 68, 0.08);border:1px solid rgba(239, 68, 68, 0.25);border-radius:6px;color:var(--text-default);display:flex;align-items:flex-start;gap:10px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink:0;margin-top:2px;">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <div>
+                            <strong>Permanent Storage Deletion:</strong>
+                            <p style="margin:4px 0 0;">This community-published book's PDF document will be permanently deleted from Supabase Storage and removed from the active catalog.</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div style="margin-top:12px;padding:12px 14px;font-size:0.8125rem;background:rgba(59, 130, 246, 0.08);border:1px solid rgba(59, 130, 246, 0.25);border-radius:6px;color:var(--text-default);display:flex;align-items:flex-start;gap:10px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="flex-shrink:0;margin-top:2px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <div>
+                            <strong>Catalog Exclusion:</strong>
+                            <p style="margin:4px 0 0;">This book will be permanently recorded as removed and excluded from the catalog index across the platform.</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="modal-actions" style="margin-top:20px;">
+                    <button type="button" class="btn-action-secondary" @onclick="CloseRemoveModal">Cancel</button>
+                    <button type="button" class="btn-reject" @onclick="ConfirmRemoveBook" disabled="@isProcessing">
+                        @(isProcessing ? "Removing Book..." : "Confirm Removal & Delete")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private string adminEmail = "";
     private string adminPassword = "";
@@ -318,8 +523,13 @@
     private bool isLoading = false;
     private bool isProcessing = false;
 
+    private string currentPortalView = "submissions";
     private List<BookSubmission> submissions = new();
     private string activeTab = "pending";
+
+    private string catalogSearchQuery = "";
+    private string catalogSourceFilter = "all";
+    private Book? bookToRemove;
 
     private BookSubmission? previewBook;
     private BookSubmission? rejectBookTarget;
@@ -334,6 +544,35 @@
         "rejected" => submissions.Where(s => s.IsRejected).ToList(),
         _ => submissions
     };
+
+    private IReadOnlyList<Book> filteredCatalogBooks
+    {
+        get
+        {
+            var books = Books.All;
+
+            if (catalogSourceFilter == "community")
+            {
+                books = books.Where(b => b.IsCommunityPublished).ToList();
+            }
+            else if (catalogSourceFilter == "core")
+            {
+                books = books.Where(b => !b.IsCommunityPublished).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(catalogSearchQuery))
+            {
+                var q = catalogSearchQuery.Trim();
+                books = books.Where(b =>
+                    b.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    (b.Author != null && b.Author.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (b.Category != null && b.Category.Contains(q, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+            }
+
+            return books;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -411,6 +650,7 @@
         try
         {
             submissions = await Supabase.GetSubmissionsAsync("all");
+            await Books.RefreshCommunityBooksAsync();
         }
         finally
         {
@@ -451,6 +691,60 @@
         rejectionReasonText = text;
     }
 
+    private void PromptRemoveBook(Book book)
+    {
+        bookToRemove = book;
+    }
+
+    private void CloseRemoveModal()
+    {
+        bookToRemove = null;
+    }
+
+    private async Task ConfirmRemoveBook()
+    {
+        if (bookToRemove == null) return;
+        isProcessing = true;
+        actionMessage = null;
+        try
+        {
+            bool ok = false;
+            if (bookToRemove.IsCommunityPublished)
+            {
+                long subId = bookToRemove.SubmissionId ?? (bookToRemove.Id - 100000);
+                ok = await Supabase.RemoveCommunityBookAsync(subId, bookToRemove.StorageFilePath);
+            }
+            else
+            {
+                ok = await Supabase.RemoveCoreCatalogBookAsync(bookToRemove.Id);
+            }
+
+            if (ok)
+            {
+                var title = bookToRemove.Title;
+                Books.RemoveBook(bookToRemove.Id);
+                actionMessage = $"Book \"{title}\" successfully removed from the library catalog and storage.";
+                actionIsError = false;
+                bookToRemove = null;
+            }
+            else
+            {
+                actionMessage = "Failed to remove book from catalog. Please verify database permissions.";
+                actionIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            actionMessage = ex.Message;
+            actionIsError = true;
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task AcceptBook(BookSubmission book)
     {
         isProcessing = true;
@@ -466,7 +760,6 @@
                 actionMessage = $"Book \"{book.Title}\" approved and published live!";
                 actionIsError = false;
 
-                // Dynamically refresh live library catalogue so the book appears immediately
                 await Books.RefreshCommunityBooksAsync();
             }
             else

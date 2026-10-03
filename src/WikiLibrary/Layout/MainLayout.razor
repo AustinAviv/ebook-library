@@ -93,8 +93,19 @@
         @if (Supabase.IsAuthenticated)
         {
             <div class="user-pill-dropdown">
-                <span class="user-email-pill" title="@Supabase.CurrentUser?.Email">
-                    @(Supabase.IsOwner ? "👑 Owner" : (Supabase.CurrentUser?.Email?.Split('@')[0] ?? "User"))
+                <span class="user-email-pill" title="@Supabase.CurrentUser?.Email" style="display:inline-flex;align-items:center;gap:6px;">
+                    @if (Supabase.IsOwner)
+                    {
+                        <span class="role-badge-owner">Owner</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Supabase.CurrentUser?.Uid))
+                    {
+                        <span class="user-uid-code" title="Unique ID">#@Supabase.CurrentUser.Uid</span>
+                    }
+                    else
+                    {
+                        <span>@(Supabase.CurrentUser?.Email?.Split('@')[0] ?? "User")</span>
+                    }
                 </span>
                 <button type="button" class="btn-signout" @onclick="Supabase.SignOutAsync" title="Sign Out">
                     Sign Out
