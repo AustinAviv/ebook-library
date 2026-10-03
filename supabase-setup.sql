@@ -17,15 +17,25 @@ insert into public.app_admins (email)
 values ('abhikr6714@gmail.com')
 on conflict (email) do nothing;
 
+-- Fix: app_admins select policy must NEVER query itself to prevent 42P17 infinite recursion
 drop policy if exists "Admins can view admins" on public.app_admins;
-create policy "Admins can view admins"
+drop policy if exists "Anyone can read app_admins" on public.app_admins;
+create policy "Anyone can read app_admins"
 on public.app_admins for select
-using (
-    exists (
-        select 1 from public.app_admins a
-        where lower(a.email) = lower(auth.jwt()->>'email')
-    )
-);
+using (true);
+
+-- Helper security definer function: bypasses RLS and verifies admin status safely
+create or replace function public.is_platform_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.app_admins
+    where lower(email) = lower(auth.jwt()->>'email')
+  ) or lower(coalesce(auth.jwt()->>'email', '')) = 'abhikr6714@gmail.com';
+$$;
 
 -- 2. Create the book_submissions table
 create table if not exists public.book_submissions (
@@ -86,28 +96,13 @@ with check (status = 'pending');
 -- Policy 3: Platform Admins can update submissions (e.g. Accept and Publish, or Reject with reason)
 create policy "Owner can update submissions"
 on public.book_submissions for update
-using (
-    exists (
-        select 1 from public.app_admins a
-        where lower(a.email) = lower(auth.jwt()->>'email')
-    )
-)
-with check (
-    exists (
-        select 1 from public.app_admins a
-        where lower(a.email) = lower(auth.jwt()->>'email')
-    )
-);
+using (public.is_platform_admin())
+with check (public.is_platform_admin());
 
 -- Policy 4: Platform Admins can delete submissions
 create policy "Owner can delete submissions"
 on public.book_submissions for delete
-using (
-    exists (
-        select 1 from public.app_admins a
-        where lower(a.email) = lower(auth.jwt()->>'email')
-    )
-);
+using (public.is_platform_admin());
 
 -- ==========================================================
 -- 5. Supabase Storage Setup (Bucket: book-submissions)
@@ -148,18 +143,12 @@ create policy "Owner update book-submissions"
 on storage.objects for update
 using (
     bucket_id = 'book-submissions' and
-    exists (
-        select 1 from public.app_admins a
-        where lower(a.email) = lower(auth.jwt()->>'email')
-    )
+    public.is_platform_admin()
 );
 
 create policy "Owner delete book-submissions"
 on storage.objects for delete
 using (
     bucket_id = 'book-submissions' and
-    exists (
-        select 1 from public.app_admins a
-        where lower(a.email) = lower(auth.jwt()->>'email')
-    )
+    public.is_platform_admin()
 );

@@ -289,6 +289,8 @@
                 updatePayload.rejection_reason = null;
             }
 
+            console.log(`[SupabaseBridge] Updating submission ${id} to ${newStatus}...`);
+
             const { data, error } = await client
                 .from("book_submissions")
                 .update(updatePayload)
@@ -296,14 +298,31 @@
                 .select();
 
             if (error) {
-                return JSON.stringify({ success: false, error: error.message });
+                console.error("[SupabaseBridge] Error updating submission:", error);
+                let msg = error.message || error.details || "Update failed.";
+                if (msg.includes("infinite recursion") || msg.includes("42P17")) {
+                    msg = "Database policy error (infinite recursion in app_admins). Please run the updated supabase-setup.sql in your Supabase SQL Editor.";
+                } else if (msg.toLowerCase().includes("row-level security") || msg.toLowerCase().includes("permission denied")) {
+                    msg = "Permission denied. Ensure you are signed in as the platform owner and have run supabase-setup.sql.";
+                }
+                return JSON.stringify({ success: false, error: msg });
             }
 
+            if (!data || data.length === 0) {
+                console.warn("[SupabaseBridge] Update returned 0 rows. RLS policy likely prevented the update.");
+                return JSON.stringify({
+                    success: false,
+                    error: "Update permission denied: 0 rows modified. Please ensure you ran the latest supabase-setup.sql in Supabase SQL editor and are signed in as the platform owner."
+                });
+            }
+
+            console.log(`[SupabaseBridge] Submission ${id} updated successfully:`, data[0]);
             return JSON.stringify({
                 success: true,
-                submission: data && data.length > 0 ? data[0] : null
+                submission: data[0]
             });
         } catch (err) {
+            console.error("[SupabaseBridge] Exception in supabaseUpdateSubmissionStatus:", err);
             return JSON.stringify({ success: false, error: err.message || String(err) });
         }
     };

@@ -255,6 +255,12 @@
         Supabase.AuthStateChanged += OnAuthStateChanged;
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await Supabase.EnsureInitializedAsync();
+        StateHasChanged();
+    }
+
     private void OnAuthStateChanged() => InvokeAsync(StateHasChanged);
     private void HandleAuthSuccess() => InvokeAsync(StateHasChanged);
 
