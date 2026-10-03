@@ -132,7 +132,15 @@
                 }
                 else
                 {
-                    errorMessage = res.Error ?? "Failed to create account.";
+                    var rawErr = res.Error ?? "Failed to create account.";
+                    if (rawErr.Contains("Signups not allowed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        errorMessage = "Public signups are disabled in this Supabase project (Authentication > Providers > Email). If you are the platform owner, please use the Sign In tab. Anyone can submit books as a guest without signing in!";
+                    }
+                    else
+                    {
+                        errorMessage = rawErr;
+                    }
                 }
             }
             else

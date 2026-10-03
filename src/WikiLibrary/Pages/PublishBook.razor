@@ -274,13 +274,23 @@
         var val = e.Value?.ToString() ?? "";
         if (!string.IsNullOrWhiteSpace(val))
         {
-            var clean = Path.GetFileName(val);
+            var clean = val;
+            // Strip any Windows (C:\fakepath\) or Unix directory prefix
+            int lastSlash = Math.Max(clean.LastIndexOf('/'), clean.LastIndexOf('\\'));
+            if (lastSlash >= 0 && lastSlash < clean.Length - 1)
+            {
+                clean = clean.Substring(lastSlash + 1);
+            }
             selectedFileName = clean;
+
             if (string.IsNullOrWhiteSpace(formModel.Title))
             {
-                // Auto-generate title suggestion from file name
-                var nameWithoutExt = Path.GetFileNameWithoutExtension(clean);
-                formModel.Title = System.Text.RegularExpressions.Regex.Replace(nameWithoutExt, @"[_\-]+", " ").Trim();
+                var titleCandidate = clean;
+                if (titleCandidate.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                {
+                    titleCandidate = titleCandidate.Substring(0, titleCandidate.Length - 4);
+                }
+                formModel.Title = System.Text.RegularExpressions.Regex.Replace(titleCandidate, @"[_\-]+", " ").Trim();
             }
         }
     }

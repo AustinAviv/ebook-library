@@ -48,7 +48,13 @@
                 email: email.trim(),
                 password: password
             });
-            if (error) return JSON.stringify({ success: false, error: error.message });
+            if (error) {
+                let msg = error.message;
+                if (msg.toLowerCase().includes("signups not allowed")) {
+                    msg = "Signups are disabled in your Supabase project (under Authentication > Providers > Email). Anyone can still submit books as a guest without an account! If you are the platform owner, please use Sign In.";
+                }
+                return JSON.stringify({ success: false, error: msg });
+            }
             return JSON.stringify({
                 success: true,
                 user: data.user ? { id: data.user.id, email: data.user.email } : null,
@@ -116,7 +122,7 @@
 
         const file = inputEl.files[0];
         if (file.type && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-            return JSON.stringify({ success: false, error: "Selected file must be a PDF." });
+            return JSON.stringify({ success: false, error: "Selected file must be a PDF document (.pdf)." });
         }
 
         // 50 MB limit
@@ -125,7 +131,10 @@
             return JSON.stringify({ success: false, error: "File exceeds 50 MB maximum limit." });
         }
 
-        const cleanName = (sanitizedFileName || file.name || "book.pdf")
+        // Clean up filename and strip any C:\fakepath\ or directories
+        const rawName = sanitizedFileName || file.name || "book.pdf";
+        const baseName = rawName.split(/[\\/]/).pop() || "book.pdf";
+        const cleanName = baseName
             .toLowerCase()
             .replace(/[^a-z0-9._-]/g, "_");
         const uniquePath = `uploads/${Date.now()}_${cleanName}`;
@@ -140,7 +149,14 @@
                 });
 
             if (error) {
-                return JSON.stringify({ success: false, error: error.message });
+                console.error("[SupabaseBridge] Storage upload error:", error);
+                let userMsg = error.message;
+                if (userMsg.toLowerCase().includes("bucket not found") || userMsg.toLowerCase().includes("bucket")) {
+                    userMsg = "Storage bucket 'book-submissions' not found. Please run supabase-setup.sql in your Supabase SQL Editor.";
+                } else if (userMsg.toLowerCase().includes("row-level security")) {
+                    userMsg = "Storage upload permission denied. Please run supabase-setup.sql in your Supabase SQL Editor.";
+                }
+                return JSON.stringify({ success: false, error: userMsg });
             }
 
             const { data: publicData } = client.storage
@@ -165,18 +181,33 @@
 
         try {
             const payload = JSON.parse(payloadJson);
-            const { data, error } = await client
+
+            // Attempt insert with .select() to get generated database row
+            const insertResult = await client
                 .from("book_submissions")
                 .insert([payload])
                 .select();
 
-            if (error) {
-                return JSON.stringify({ success: false, error: error.message });
+            if (insertResult.error) {
+                console.warn("[SupabaseBridge] Insert with select returned:", insertResult.error.message, "Retrying with standard insert...");
+                // Resilient fallback: If SELECT is blocked by RLS for guest users, execute standard insert
+                const fallbackResult = await client
+                    .from("book_submissions")
+                    .insert([payload]);
+
+                if (fallbackResult.error) {
+                    return JSON.stringify({ success: false, error: fallbackResult.error.message });
+                }
+
+                return JSON.stringify({
+                    success: true,
+                    submission: payload
+                });
             }
 
             return JSON.stringify({
                 success: true,
-                submission: data && data.length > 0 ? data[0] : null
+                submission: insertResult.data && insertResult.data.length > 0 ? insertResult.data[0] : payload
             });
         } catch (err) {
             return JSON.stringify({ success: false, error: err.message || String(err) });

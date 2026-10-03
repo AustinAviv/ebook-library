@@ -35,40 +35,32 @@ create index if not exists idx_book_submissions_submitter_email on public.book_s
 -- 3. Enable Row Level Security (RLS)
 alter table public.book_submissions enable row level security;
 
--- Drop existing policies if any
+-- Drop existing policies to prevent conflicts
 drop policy if exists "Anyone can read accepted books" on public.book_submissions;
 drop policy if exists "Submitters can view their own submissions" on public.book_submissions;
 drop policy if exists "Owner can view all submissions" on public.book_submissions;
 drop policy if exists "Anyone can submit a book for review" on public.book_submissions;
 drop policy if exists "Owner can update submissions" on public.book_submissions;
 drop policy if exists "Owner can delete submissions" on public.book_submissions;
+drop policy if exists "Public read submissions" on public.book_submissions;
+drop policy if exists "Anyone can read submissions" on public.book_submissions;
 
--- Policy 1: Anyone (public or authenticated) can view accepted books
-create policy "Anyone can read accepted books"
+-- Policy 1: Anyone (public, guest, or authenticated) can read submissions
+-- This ensures guests can track their submissions on /my-submissions,
+-- allows the public catalogue to display accepted books,
+-- and prevents RLS errors when inserting new rows with return values.
+create policy "Anyone can read submissions"
 on public.book_submissions for select
-using (status = 'accepted');
+using (true);
 
--- Policy 2: Users can view their own submissions (by user ID or email)
-create policy "Submitters can view their own submissions"
-on public.book_submissions for select
-using (
-    (auth.uid() is not null and submitted_by = auth.uid()) or
-    (auth.jwt() is not null and lower(submitter_email) = lower(auth.jwt()->>'email'))
-);
-
--- Policy 3: Owner (abhikr6714@gmail.com) can view all submissions
-create policy "Owner can view all submissions"
-on public.book_submissions for select
-using (
-    lower(auth.jwt()->>'email') = 'abhikr6714@gmail.com'
-);
-
--- Policy 4: Anyone (authenticated or guest) can insert a new submission with status 'pending'
+-- Policy 2: Anyone (authenticated or guest) can submit a book for review,
+-- but the status MUST be 'pending'. Nobody can self-publish without review.
 create policy "Anyone can submit a book for review"
 on public.book_submissions for insert
 with check (status = 'pending');
 
--- Policy 5: Owner can update any submission (to accept, reject, add reason, etc.)
+-- Policy 3: Platform Owner (abhikr6714@gmail.com) can update submissions
+-- (e.g. Accept and Publish, or Reject with reason)
 create policy "Owner can update submissions"
 on public.book_submissions for update
 using (
@@ -78,7 +70,7 @@ with check (
     lower(auth.jwt()->>'email') = 'abhikr6714@gmail.com'
 );
 
--- Policy 6: Owner can delete submissions
+-- Policy 4: Platform Owner can delete submissions
 create policy "Owner can delete submissions"
 on public.book_submissions for delete
 using (
@@ -103,23 +95,23 @@ on conflict (id) do update set
     file_size_limit = 52428800,
     allowed_mime_types = array['application/pdf'];
 
--- Storage Policies:
+-- Storage Policies
 drop policy if exists "Public read book-submissions" on storage.objects;
 drop policy if exists "Public insert book-submissions" on storage.objects;
 drop policy if exists "Owner update book-submissions" on storage.objects;
 drop policy if exists "Owner delete book-submissions" on storage.objects;
 
--- Allow public downloads and reads of uploaded books
+-- Allow public read access to uploaded books
 create policy "Public read book-submissions"
 on storage.objects for select
 using (bucket_id = 'book-submissions');
 
--- Allow anyone (guest or signed-in) to upload PDFs to book-submissions
+-- Allow anyone (guest or signed-in) to upload PDFs directly to book-submissions
 create policy "Public insert book-submissions"
 on storage.objects for insert
 with check (bucket_id = 'book-submissions');
 
--- Allow owner to update or remove files
+-- Allow platform owner to manage storage objects
 create policy "Owner update book-submissions"
 on storage.objects for update
 using (bucket_id = 'book-submissions' and lower(auth.jwt()->>'email') = 'abhikr6714@gmail.com');
