@@ -1,0 +1,163 @@
+@inject SupabaseService Supabase
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="Close">
+        <div class="modal-card" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>@(isSignUp ? "Create an Account" : "Sign In to Aviv Library")</h3>
+                <button type="button" class="modal-close-btn" @onclick="Close" aria-label="Close modal">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button type="button" class="auth-tab @(!isSignUp ? "active" : "")" @onclick="() => SetMode(false)">Sign In</button>
+                    <button type="button" class="auth-tab @(isSignUp ? "active" : "")" @onclick="() => SetMode(true)">Sign Up</button>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="auth-alert error">@errorMessage</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="auth-alert success">@successMessage</div>
+                }
+
+                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault>
+                    <div class="form-group">
+                        <label for="auth-email">Email Address</label>
+                        <input id="auth-email" type="email" class="form-input" placeholder="you@example.com"
+                               required @bind="email" disabled="@isLoading" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auth-password">Password</label>
+                        <input id="auth-password" type="password" class="form-input" placeholder="••••••••"
+                               required @bind="password" disabled="@isLoading" />
+                        @if (isSignUp)
+                        {
+                            <span class="form-hint">At least 6 characters required.</span>
+                        }
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-action-primary w-full" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span>Please wait...</span>
+                            }
+                            else
+                            {
+                                <span>@(isSignUp ? "Create Account" : "Sign In")</span>
+                            }
+                        </button>
+                    </div>
+                </form>
+
+                <div class="auth-footer-note">
+                    @if (!isSignUp)
+                    {
+                        <span>Need an account? <button type="button" class="link-btn" @onclick="() => SetMode(true)">Sign up</button></span>
+                    }
+                    else
+                    {
+                        <span>Already registered? <button type="button" class="link-btn" @onclick="() => SetMode(false)">Sign in</button></span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnAuthSuccess { get; set; }
+
+    public bool IsOpen { get; private set; }
+    private bool isSignUp = false;
+    private string email = "";
+    private string password = "";
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isLoading = false;
+
+    public void Show(bool signUp = false)
+    {
+        isSignUp = signUp;
+        errorMessage = null;
+        successMessage = null;
+        IsOpen = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        IsOpen = false;
+        errorMessage = null;
+        successMessage = null;
+        StateHasChanged();
+    }
+
+    private void SetMode(bool signUp)
+    {
+        isSignUp = signUp;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Please enter both email and password.";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            if (isSignUp)
+            {
+                var res = await Supabase.SignUpAsync(email, password);
+                if (res.Success)
+                {
+                    successMessage = "Account created successfully! You are now signed in.";
+                    await OnAuthSuccess.InvokeAsync();
+                    await Task.Delay(1000);
+                    Close();
+                }
+                else
+                {
+                    errorMessage = res.Error ?? "Failed to create account.";
+                }
+            }
+            else
+            {
+                var res = await Supabase.SignInAsync(email, password);
+                if (res.Success)
+                {
+                    successMessage = "Signed in successfully!";
+                    await OnAuthSuccess.InvokeAsync();
+                    await Task.Delay(600);
+                    Close();
+                }
+                else
+                {
+                    errorMessage = res.Error ?? "Invalid email or password.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

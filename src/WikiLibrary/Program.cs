@@ -8,9 +8,13 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddSingleton<SupabaseService>();
 builder.Services.AddSingleton<BookService>();
 
 var host = builder.Build();
+
+var supabase = host.Services.GetRequiredService<SupabaseService>();
+_ = supabase.EnsureInitializedAsync();
 
 var books = host.Services.GetRequiredService<BookService>();
 _ = books.EnsureLoadedAsync();

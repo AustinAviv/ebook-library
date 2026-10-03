@@ -1,0 +1,352 @@
+@page "/publish"
+@inject SupabaseService Supabase
+@inject NavigationManager Nav
+@inject BookService Books
+
+<PageTitle>Submit a Book - Aviv Library</PageTitle>
+
+<div class="publish-container">
+    <nav class="book-breadcrumb">
+        <a href="/">← Library</a>
+        <span class="crumb-separator">/</span>
+        <span class="crumb-current">Submit a Book</span>
+    </nav>
+
+    @if (submittedSuccessfully && latestSubmission != null)
+    {
+        <div class="submission-success-card">
+            <div class="success-icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2>Book Submitted for Review!</h2>
+            <p class="muted">Thank you for contributing to Aviv Library. Your submission has been securely stored and queued for owner review.</p>
+
+            <div class="submission-summary-box">
+                <div class="summary-row">
+                    <span class="summary-label">Book Title</span>
+                    <span class="summary-value"><strong>@latestSubmission.Title</strong></span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Author</span>
+                    <span class="summary-value">@(string.IsNullOrWhiteSpace(latestSubmission.Author) ? "Unknown author" : latestSubmission.Author)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">File Size</span>
+                    <span class="summary-value">@latestSubmission.FileSizeText</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Current Status</span>
+                    <span class="badge-status-pending">Pending Review</span>
+                </div>
+            </div>
+
+            <div class="submission-timeline-card">
+                <h4>Publishing Workflow</h4>
+                <div class="timeline-step done">
+                    <span class="timeline-dot">1</span>
+                    <div class="timeline-text">
+                        <strong>Uploaded & Submitted</strong>
+                        <p class="muted">PDF uploaded directly to platform storage</p>
+                    </div>
+                </div>
+                <div class="timeline-step current">
+                    <span class="timeline-dot">2</span>
+                    <div class="timeline-text">
+                        <strong>Pending Platform Review</strong>
+                        <p class="muted">Platform owner reviews formatting, scan quality, and guidelines</p>
+                    </div>
+                </div>
+                <div class="timeline-step">
+                    <span class="timeline-dot">3</span>
+                    <div class="timeline-text">
+                        <strong>Accepted & Published</strong>
+                        <p class="muted">Once accepted, your book becomes immediately accessible in the public library catalogue</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <a href="/my-submissions" class="btn-action-primary">View in My Submissions</a>
+                <button type="button" class="btn-action-secondary" @onclick="ResetForm">Submit Another Book</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <header class="publish-header">
+            <h1 class="page-title">Submit a Book to the Library</h1>
+            <p class="lead-text">
+                Anyone can submit a book to Aviv Library. Upload your PDF file and fill out the metadata below.
+                Submissions are reviewed by the platform owner before being published publicly.
+            </p>
+        </header>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="auth-alert error" style="margin-bottom: 24px;">
+                @errorMessage
+            </div>
+        }
+
+        <form class="publish-form" @onsubmit="HandleFormSubmit" @onsubmit:preventDefault>
+            <!-- Step 1: Upload File -->
+            <section class="form-section-card">
+                <div class="section-card-header">
+                    <span class="section-number">1</span>
+                    <div>
+                        <h3>Select Book PDF</h3>
+                        <p class="muted">Upload your complete PDF document (up to 50 MB).</p>
+                    </div>
+                </div>
+
+                <div class="file-dropzone-wrapper">
+                    <input type="file" id="book-upload-input" accept="application/pdf,.pdf"
+                           class="file-native-input" @onchange="OnFileSelected" disabled="@isSubmitting" />
+                    <label for="book-upload-input" class="file-dropzone-label">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        @if (!string.IsNullOrWhiteSpace(selectedFileName))
+                        {
+                            <span class="dropzone-filename">Selected: <strong>@selectedFileName</strong></span>
+                            <span class="dropzone-sub">Click to choose a different PDF file</span>
+                        }
+                        else
+                        {
+                            <span class="dropzone-prompt"><strong>Choose a PDF file</strong> or drag & drop here</span>
+                            <span class="dropzone-sub">Standard .pdf format only, up to 50 MB</span>
+                        }
+                    </label>
+                </div>
+            </section>
+
+            <!-- Step 2: Book Information -->
+            <section class="form-section-card">
+                <div class="section-card-header">
+                    <span class="section-number">2</span>
+                    <div>
+                        <h3>Book Metadata</h3>
+                        <p class="muted">Provide accurate information so readers can discover this book.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group span-2">
+                        <label for="book-title">Book Title <span class="required">*</span></label>
+                        <input id="book-title" type="text" class="form-input" placeholder="e.g. Beyond Good and Evil"
+                               required @bind="formModel.Title" disabled="@isSubmitting" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-author">Author</label>
+                        <input id="book-author" type="text" class="form-input" placeholder="e.g. Friedrich Nietzsche"
+                               @bind="formModel.Author" disabled="@isSubmitting" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-category">Category / Topic</label>
+                        <select id="book-category" class="form-select" @bind="formModel.Category" disabled="@isSubmitting">
+                            <option value="General">General / Uncategorized</option>
+                            <option value="Philosophy">Philosophy</option>
+                            <option value="Literature">Literature & Fiction</option>
+                            <option value="Science">Science & Nature</option>
+                            <option value="History">History & Biography</option>
+                            <option value="Technology">Technology & Computer Science</option>
+                            <option value="Economics">Economics & Business</option>
+                            <option value="Art">Art & Design</option>
+                            <option value="Psychology">Psychology</option>
+                            <option value="Politics">Politics & Society</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-year">Publication Year</label>
+                        <input id="book-year" type="number" class="form-input" placeholder="e.g. 1886"
+                               min="1000" max="2100" @bind="formModel.Year" disabled="@isSubmitting" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="book-lang">Language</label>
+                        <input id="book-lang" type="text" class="form-input" placeholder="English"
+                               @bind="formModel.Language" disabled="@isSubmitting" />
+                    </div>
+
+                    <div class="form-group span-2">
+                        <label for="book-desc">Description / Synopsis</label>
+                        <textarea id="book-desc" class="form-textarea" rows="4"
+                                  placeholder="Provide a brief summary or overview of the contents..."
+                                  @bind="formModel.Description" disabled="@isSubmitting"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Submitter Information -->
+            <section class="form-section-card">
+                <div class="section-card-header">
+                    <span class="section-number">3</span>
+                    <div>
+                        <h3>Submitter Details</h3>
+                        <p class="muted">Used to link submissions to your account and track review progress.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="submitter-name">Your Name or Alias</label>
+                        <input id="submitter-name" type="text" class="form-input" placeholder="e.g. Alex"
+                               @bind="formModel.SubmitterName" disabled="@isSubmitting" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="submitter-email">Your Email Address</label>
+                        <input id="submitter-email" type="email" class="form-input" placeholder="you@example.com"
+                               @bind="formModel.SubmitterEmail" disabled="@isSubmitting" />
+                        <span class="form-hint">Allows you to check status under My Submissions.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Platform Guidelines -->
+            <section class="form-section-card">
+                <div class="checkbox-container">
+                    <input type="checkbox" id="guidelines-check" required @bind="agreedToGuidelines" disabled="@isSubmitting" />
+                    <label for="guidelines-check">
+                        I confirm this book complies with platform guidelines: it is public domain, open access, or appropriately licensed, and contains no illegal or harmful content.
+                    </label>
+                </div>
+            </section>
+
+            <!-- Submission Actions -->
+            <div class="publish-submit-bar">
+                <button type="submit" class="btn-action-primary publish-btn" disabled="@(!CanSubmit || isSubmitting)">
+                    @if (isSubmitting)
+                    {
+                        <div class="btn-spinner"></div>
+                        <span>@submissionStatusText</span>
+                    }
+                    else
+                    {
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        <span>Submit Book for Review</span>
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</div>
+
+@code {
+    private BookSubmission formModel = new() { Category = "General", Language = "English" };
+    private string selectedFileName = "";
+    private bool agreedToGuidelines = false;
+    private bool isSubmitting = false;
+    private string submissionStatusText = "Submitting...";
+    private string? errorMessage;
+    private bool submittedSuccessfully = false;
+    private BookSubmission? latestSubmission;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(selectedFileName) &&
+                              !string.IsNullOrWhiteSpace(formModel.Title) &&
+                              agreedToGuidelines;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Supabase.EnsureInitializedAsync();
+        if (Supabase.CurrentUser != null)
+        {
+            if (string.IsNullOrWhiteSpace(formModel.SubmitterEmail))
+            {
+                formModel.SubmitterEmail = Supabase.CurrentUser.Email;
+            }
+        }
+    }
+
+    private void OnFileSelected(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString() ?? "";
+        if (!string.IsNullOrWhiteSpace(val))
+        {
+            var clean = Path.GetFileName(val);
+            selectedFileName = clean;
+            if (string.IsNullOrWhiteSpace(formModel.Title))
+            {
+                // Auto-generate title suggestion from file name
+                var nameWithoutExt = Path.GetFileNameWithoutExtension(clean);
+                formModel.Title = System.Text.RegularExpressions.Regex.Replace(nameWithoutExt, @"[_\-]+", " ").Trim();
+            }
+        }
+    }
+
+    private async Task HandleFormSubmit()
+    {
+        if (!CanSubmit) return;
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            // 1. Direct browser-to-Supabase Storage upload (0 Vercel serverless load)
+            submissionStatusText = "Uploading PDF to storage...";
+            StateHasChanged();
+
+            var uploadRes = await Supabase.UploadBookFileAsync("book-upload-input", selectedFileName);
+            if (!uploadRes.Success || string.IsNullOrWhiteSpace(uploadRes.PublicUrl))
+            {
+                errorMessage = uploadRes.Error ?? "Failed to upload PDF to storage.";
+                isSubmitting = false;
+                return;
+            }
+
+            // 2. Insert record into Supabase book_submissions with status 'pending'
+            submissionStatusText = "Submitting for review...";
+            StateHasChanged();
+
+            formModel.FilePath = uploadRes.FilePath ?? "";
+            formModel.PublicUrl = uploadRes.PublicUrl;
+            formModel.FileSize = uploadRes.FileSize;
+            formModel.Status = "pending";
+
+            var createRes = await Supabase.CreateSubmissionAsync(formModel);
+            if (!createRes.Success || createRes.Submission == null)
+            {
+                errorMessage = createRes.Error ?? "Failed to save submission record.";
+                isSubmitting = false;
+                return;
+            }
+
+            latestSubmission = createRes.Submission;
+            submittedSuccessfully = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred: " + ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        formModel = new BookSubmission { Category = "General", Language = "English" };
+        if (Supabase.CurrentUser != null)
+        {
+            formModel.SubmitterEmail = Supabase.CurrentUser.Email;
+        }
+        selectedFileName = "";
+        agreedToGuidelines = false;
+        submittedSuccessfully = false;
+        latestSubmission = null;
+        errorMessage = null;
+    }
+}

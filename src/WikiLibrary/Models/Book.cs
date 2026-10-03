@@ -12,10 +12,16 @@ public class Book
     public int Pages { get; set; }
     public long FileSize { get; set; }
     public string BlobPathname { get; set; } = "";
+    public string? Url { get; set; }
+    public string? DownloadUrl { get; set; }
+    public bool IsCommunityPublished { get; set; }
 
     public bool HasAuthor => !string.IsNullOrWhiteSpace(Author) && !Author.Equals("Unknown author", StringComparison.OrdinalIgnoreCase);
     public bool HasCategory => !string.IsNullOrWhiteSpace(Category) && !Category.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase);
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description) && !Description.Equals("No description yet.", StringComparison.OrdinalIgnoreCase);
+
+    public string EffectiveDownloadUrl => !string.IsNullOrWhiteSpace(DownloadUrl) ? DownloadUrl : $"/api/download?id={Id}";
+    public string EffectiveViewUrl => !string.IsNullOrWhiteSpace(Url) ? Url : (!string.IsNullOrWhiteSpace(DownloadUrl) ? DownloadUrl : $"/api/download?id={Id}&view=1");
 
     public string FileSizeText
     {

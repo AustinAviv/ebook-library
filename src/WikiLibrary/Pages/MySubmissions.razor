@@ -1,0 +1,186 @@
+@page "/my-submissions"
+@inject SupabaseService Supabase
+@inject NavigationManager Nav
+@inject BookService Books
+
+<PageTitle>My Submissions - Aviv Library</PageTitle>
+
+<div class="submissions-page-wrapper">
+    <nav class="book-breadcrumb">
+        <a href="/">← Library</a>
+        <span class="crumb-separator">/</span>
+        <span class="crumb-current">My Submissions</span>
+    </nav>
+
+    <header class="submissions-header">
+        <div>
+            <h1 class="page-title">My Book Submissions</h1>
+            <p class="muted">Track the review status and approval of books you've submitted to the library.</p>
+        </div>
+        <a href="/publish" class="btn-action-primary">+ Submit Another Book</a>
+    </header>
+
+    <div class="email-lookup-card">
+        <form class="email-lookup-form" @onsubmit="LoadSubmissions" @onsubmit:preventDefault>
+            <div class="lookup-input-group">
+                <label for="lookup-email" class="lookup-label">Submitter Email:</label>
+                <input id="lookup-email" type="email" class="form-input" placeholder="Enter your email..."
+                       @bind="queryEmail" />
+                <button type="submit" class="btn-action-secondary" disabled="@isLoading">
+                    @(isLoading ? "Searching..." : "Find Submissions")
+                </button>
+            </div>
+            @if (Supabase.IsAuthenticated && !string.IsNullOrWhiteSpace(Supabase.CurrentUser?.Email))
+            {
+                <span class="lookup-auth-hint">
+                    Signed in as <strong>@Supabase.CurrentUser.Email</strong>
+                </span>
+            }
+        </form>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="submissions-loading">
+            <div class="loader-spinner"></div>
+            <p class="muted">Loading submissions...</p>
+        </div>
+    }
+    else if (hasSearched && submissions.Count == 0)
+    {
+        <div class="empty-submissions-card">
+            <div class="empty-icon">📚</div>
+            <h3>No submissions found</h3>
+            <p class="muted">No book submissions were found for <strong>@queryEmail</strong>.</p>
+            <a href="/publish" class="btn-action-primary" style="margin-top:12px;">Submit a Book Now</a>
+        </div>
+    }
+    else if (submissions.Count > 0)
+    {
+        <div class="submissions-list">
+            @foreach (var item in submissions)
+            {
+                <div class="submission-card @item.StatusBadgeClass">
+                    <div class="submission-card-top">
+                        <div class="submission-title-group">
+                            <h3 class="submission-card-title">@item.Title</h3>
+                            <span class="submission-card-author">by @(string.IsNullOrWhiteSpace(item.Author) ? "Unknown Author" : item.Author)</span>
+                        </div>
+                        <div class="submission-status-pill @item.StatusBadgeClass">
+                            @if (item.IsPending)
+                            {
+                                <span class="status-indicator pending"></span>
+                                <span>Pending Review</span>
+                            }
+                            else if (item.IsAccepted)
+                            {
+                                <span class="status-indicator accepted"></span>
+                                <span>Accepted & Published</span>
+                            }
+                            else
+                            {
+                                <span class="status-indicator rejected"></span>
+                                <span>Rejected</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="submission-card-meta">
+                        <span>Category: <strong>@item.Category</strong></span>
+                        <span class="meta-dot">•</span>
+                        <span>Size: <strong>@item.FileSizeText</strong></span>
+                        <span class="meta-dot">•</span>
+                        <span>Submitted: <strong>@item.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</strong></span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.Description))
+                    {
+                        <p class="submission-card-desc">@item.Description</p>
+                    }
+
+                    @if (item.IsPending)
+                    {
+                        <div class="submission-notice pending">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>Awaiting review by platform owner. You can preview the PDF below while review is in progress.</span>
+                        </div>
+                    }
+                    else if (item.IsAccepted)
+                    {
+                        <div class="submission-notice accepted">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span>This book is approved and publicly available in Aviv Library!</span>
+                        </div>
+                    }
+                    else if (item.IsRejected)
+                    {
+                        <div class="submission-notice rejected">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                            <div>
+                                <strong>Rejection Reason:</strong>
+                                <p>@(string.IsNullOrWhiteSpace(item.RejectionReason) ? "Does not meet platform guidelines." : item.RejectionReason)</p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="submission-card-actions">
+                        @if (!string.IsNullOrWhiteSpace(item.PublicUrl))
+                        {
+                            <a href="@item.PublicUrl" target="_blank" rel="noopener noreferrer" class="btn-action-secondary">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>
+                                <span>Preview Uploaded PDF</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string queryEmail = "";
+    private List<BookSubmission> submissions = new();
+    private bool isLoading = false;
+    private bool hasSearched = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Supabase.EnsureInitializedAsync();
+        if (Supabase.IsAuthenticated && !string.IsNullOrWhiteSpace(Supabase.CurrentUser?.Email))
+        {
+            queryEmail = Supabase.CurrentUser.Email;
+            await LoadSubmissions();
+        }
+    }
+
+    private async Task LoadSubmissions()
+    {
+        if (string.IsNullOrWhiteSpace(queryEmail)) return;
+
+        isLoading = true;
+        hasSearched = true;
+        try
+        {
+            submissions = await Supabase.GetUserSubmissionsAsync(queryEmail.Trim());
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

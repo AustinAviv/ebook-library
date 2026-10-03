@@ -22,10 +22,13 @@ public class BookService
     private readonly Dictionary<string, IReadOnlyList<Book>> _searchCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly LinkedList<string> _cacheLruOrder = new();
 
-    public BookService(HttpClient http, IJSRuntime js)
+    private readonly SupabaseService _supabase;
+
+    public BookService(HttpClient http, IJSRuntime js, SupabaseService supabase)
     {
         _http = http;
         _js = js;
+        _supabase = supabase;
     }
 
     public bool IsLoaded { get; private set; }
@@ -84,6 +87,8 @@ public class BookService
                 LoadError = null;
                 LoadedChanged?.Invoke();
 
+                _ = RefreshCommunityBooksAsync();
+
                 try
                 {
                     await _js.InvokeVoidAsync("saveCatalogCache", rawJson);
@@ -102,6 +107,60 @@ public class BookService
         if (!IsLoaded)
         {
             LoadError = lastError?.Message ?? "Unable to load library catalogue.";
+            LoadedChanged?.Invoke();
+        }
+    }
+
+    public async Task RefreshCommunityBooksAsync()
+    {
+        try
+        {
+            var accepted = await _supabase.GetAcceptedBooksAsync();
+            if (accepted.Count > 0)
+            {
+                MergeAcceptedSubmissions(accepted);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[BookService] Error loading community books: {ex.Message}");
+        }
+    }
+
+    public void MergeAcceptedSubmissions(List<BookSubmission> submissions)
+    {
+        if (submissions == null || submissions.Count == 0) return;
+        var existingList = _sorted.ToList();
+        bool changed = false;
+
+        foreach (var sub in submissions)
+        {
+            int virtualId = (int)(100000 + sub.Id);
+            if (!_byId.ContainsKey(virtualId))
+            {
+                var book = new Book
+                {
+                    Id = virtualId,
+                    Title = sub.Title,
+                    Author = sub.Author,
+                    Description = sub.Description,
+                    Category = !string.IsNullOrWhiteSpace(sub.Category) ? sub.Category : "Community Published",
+                    Year = sub.Year,
+                    Language = sub.Language,
+                    Pages = sub.Pages,
+                    FileSize = sub.FileSize,
+                    Url = sub.PublicUrl,
+                    DownloadUrl = sub.PublicUrl,
+                    IsCommunityPublished = true
+                };
+                existingList.Add(book);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            ApplyBooks(existingList);
             LoadedChanged?.Invoke();
         }
     }

@@ -1,0 +1,429 @@
+@page "/admin/reviews"
+@inject SupabaseService Supabase
+@inject NavigationManager Nav
+@inject BookService Books
+
+<PageTitle>Platform Owner Review Portal - Aviv Library</PageTitle>
+
+<div class="admin-portal-wrapper">
+    <nav class="book-breadcrumb">
+        <a href="/">← Library</a>
+        <span class="crumb-separator">/</span>
+        <span class="crumb-current">Platform Owner Review</span>
+    </nav>
+
+    @if (!Supabase.IsOwner)
+    {
+        <div class="owner-auth-card">
+            <div class="lock-icon-box">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h2>Platform Owner Authentication</h2>
+            <p class="muted">
+                This portal is reserved for the platform administrator (<strong>abhikr6714@gmail.com</strong>) to review submitted books, preview PDFs, and accept or reject publications.
+            </p>
+
+            @if (Supabase.IsAuthenticated)
+            {
+                <div class="auth-alert error" style="margin-top:16px;">
+                    Signed in as <strong>@Supabase.CurrentUser?.Email</strong>. This account does not have owner privileges.
+                </div>
+                <button type="button" class="btn-action-secondary" @onclick="Supabase.SignOutAsync" style="margin-top:12px;">Sign Out</button>
+            }
+            else
+            {
+                @if (!string.IsNullOrWhiteSpace(loginError))
+                {
+                    <div class="auth-alert error" style="margin-top:16px;">@loginError</div>
+                }
+
+                <form class="owner-login-form" @onsubmit="HandleOwnerLogin" @onsubmit:preventDefault>
+                    <div class="form-group">
+                        <label for="admin-email">Owner Email</label>
+                        <input id="admin-email" type="email" class="form-input" placeholder="abhikr6714@gmail.com"
+                               required @bind="adminEmail" disabled="@isLoggingIn" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin-pass">Password</label>
+                        <input id="admin-pass" type="password" class="form-input" placeholder="••••••••"
+                               required @bind="adminPassword" disabled="@isLoggingIn" />
+                    </div>
+
+                    <button type="submit" class="btn-action-primary w-full" disabled="@isLoggingIn" style="margin-top:12px;">
+                        @(isLoggingIn ? "Signing In..." : "Sign In as Platform Owner")
+                    </button>
+                </form>
+            }
+        </div>
+    }
+    else
+    {
+        <header class="admin-header">
+            <div>
+                <h1 class="page-title">Platform Owner Review Portal</h1>
+                <p class="muted">Review pending submissions, inspect book PDFs, and manage catalog publication.</p>
+            </div>
+            <div class="admin-header-actions">
+                <span class="owner-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                    Owner: <strong>@Supabase.CurrentUser?.Email</strong>
+                </span>
+                <button type="button" class="btn-action-secondary btn-sm" @onclick="RefreshSubmissions" disabled="@isLoading">
+                    @(isLoading ? "Refreshing..." : "Refresh")
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Overview Bar -->
+        <div class="admin-stats-grid">
+            <button type="button" class="admin-stat-card @(activeTab == "pending" ? "selected" : "")" @onclick='@(() => SetTab("pending"))'>
+                <span class="stat-num pending-num">@submissions.Count(s => s.IsPending)</span>
+                <span class="stat-label">Pending Review</span>
+            </button>
+            <button type="button" class="admin-stat-card @(activeTab == "accepted" ? "selected" : "")" @onclick='@(() => SetTab("accepted"))'>
+                <span class="stat-num accepted-num">@submissions.Count(s => s.IsAccepted)</span>
+                <span class="stat-label">Accepted & Published</span>
+            </button>
+            <button type="button" class="admin-stat-card @(activeTab == "rejected" ? "selected" : "")" @onclick='@(() => SetTab("rejected"))'>
+                <span class="stat-num rejected-num">@submissions.Count(s => s.IsRejected)</span>
+                <span class="stat-label">Rejected</span>
+            </button>
+            <button type="button" class="admin-stat-card @(activeTab == "all" ? "selected" : "")" @onclick='@(() => SetTab("all"))'>
+                <span class="stat-num">@submissions.Count</span>
+                <span class="stat-label">Total Submissions</span>
+            </button>
+        </div>
+
+        <!-- Filtered Submissions List -->
+        @if (isLoading)
+        {
+            <div class="submissions-loading">
+                <div class="loader-spinner"></div>
+                <p class="muted">Loading submissions...</p>
+            </div>
+        }
+        else if (filteredSubmissions.Count == 0)
+        {
+            <div class="empty-submissions-card">
+                <p class="muted">No submissions found in this category.</p>
+            </div>
+        }
+        else
+        {
+            <div class="admin-submissions-grid">
+                @foreach (var book in filteredSubmissions)
+                {
+                    <div class="admin-book-card @book.StatusBadgeClass">
+                        <div class="admin-book-header">
+                            <div>
+                                <h3 class="admin-book-title">@book.Title</h3>
+                                <span class="admin-book-author">by @(string.IsNullOrWhiteSpace(book.Author) ? "Unknown Author" : book.Author)</span>
+                            </div>
+                            <span class="submission-status-pill @book.StatusBadgeClass">
+                                @book.StatusDisplayName
+                            </span>
+                        </div>
+
+                        <div class="admin-book-info-grid">
+                            <div><span class="info-k">Category:</span> <span class="info-v">@book.Category</span></div>
+                            <div><span class="info-k">Year:</span> <span class="info-v">@(book.Year > 0 ? book.Year.ToString() : "-")</span></div>
+                            <div><span class="info-k">Language:</span> <span class="info-v">@book.Language</span></div>
+                            <div><span class="info-k">File Size:</span> <span class="info-v">@book.FileSizeText</span></div>
+                            <div><span class="info-k">Submitter:</span> <span class="info-v">@(string.IsNullOrWhiteSpace(book.SubmitterName) ? "Anonymous" : book.SubmitterName)</span></div>
+                            <div><span class="info-k">Email:</span> <span class="info-v">@(string.IsNullOrWhiteSpace(book.SubmitterEmail) ? "-" : book.SubmitterEmail)</span></div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(book.Description))
+                        {
+                            <div class="admin-book-desc">
+                                <span class="info-k">Description:</span>
+                                <p>@book.Description</p>
+                            </div>
+                        }
+
+                        @if (book.IsRejected && !string.IsNullOrWhiteSpace(book.RejectionReason))
+                        {
+                            <div class="admin-rejection-box">
+                                <strong>Rejection Reason:</strong>
+                                <p>@book.RejectionReason</p>
+                            </div>
+                        }
+
+                        <!-- Action Toolbar -->
+                        <div class="admin-book-actions">
+                            <button type="button" class="btn-action-secondary btn-sm" @onclick="() => OpenPreview(book)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <span>Preview PDF</span>
+                            </button>
+
+                            @if (book.IsPending || book.IsRejected)
+                            {
+                                <button type="button" class="btn-accept btn-sm" @onclick="() => AcceptBook(book)" disabled="@isProcessing">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Accept & Publish</span>
+                                </button>
+                            }
+
+                            @if (book.IsPending || book.IsAccepted)
+                            {
+                                <button type="button" class="btn-reject btn-sm" @onclick="() => OpenRejectModal(book)" disabled="@isProcessing">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    <span>Reject</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<!-- PDF Preview Modal -->
+@if (previewBook != null)
+{
+    <div class="modal-backdrop" @onclick="ClosePreview">
+        <div class="modal-card pdf-preview-modal" @onclick:stopPropagation>
+            <div class="modal-header">
+                <div>
+                    <h3 style="margin:0;">Preview: @previewBook.Title</h3>
+                    <span class="muted" style="font-size:0.8125rem;">@(previewBook.Author ?? "Unknown Author") • @previewBook.FileSizeText</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <a href="@previewBook.PublicUrl" target="_blank" rel="noopener noreferrer" class="btn-action-secondary btn-sm">Open in New Tab</a>
+                    <button type="button" class="modal-close-btn" @onclick="ClosePreview">×</button>
+                </div>
+            </div>
+            <div class="modal-body pdf-preview-body">
+                <iframe src="@previewBook.PublicUrl" class="pdf-preview-frame" title="PDF Preview"></iframe>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Reject Modal -->
+@if (rejectBookTarget != null)
+{
+    <div class="modal-backdrop" @onclick="CloseRejectModal">
+        <div class="modal-card" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>Reject Submission: @rejectBookTarget.Title</h3>
+                <button type="button" class="modal-close-btn" @onclick="CloseRejectModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted">Please provide a reason for rejecting this submission. The submitter will be able to see this reason in their submissions dashboard.</p>
+
+                <div class="form-group" style="margin-top:12px;">
+                    <label>Common Reasons:</label>
+                    <div class="reason-preset-chips">
+                        <button type="button" class="preset-chip" @onclick='@(() => SetReasonPreset("Copyright infringement / Non-free content."))'>Copyright Concern</button>
+                        <button type="button" class="preset-chip" @onclick='@(() => SetReasonPreset("Poor scan quality or illegible text pages."))'>Poor Scan Quality</button>
+                        <button type="button" class="preset-chip" @onclick='@(() => SetReasonPreset("Incomplete document or missing pages/chapters."))'>Incomplete Book</button>
+                        <button type="button" class="preset-chip" @onclick='@(() => SetReasonPreset("Improper categorization or misleading title."))'>Misleading Info</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:12px;">
+                    <label for="rejection-text">Rejection Explanation:</label>
+                    <textarea id="rejection-text" class="form-textarea" rows="4"
+                              placeholder="Explain why this book does not meet publishing guidelines..."
+                              @bind="rejectionReasonText"></textarea>
+                </div>
+
+                <div class="modal-actions" style="margin-top:16px;">
+                    <button type="button" class="btn-action-secondary" @onclick="CloseRejectModal">Cancel</button>
+                    <button type="button" class="btn-reject" @onclick="ConfirmReject" disabled="@isProcessing">
+                        @(isProcessing ? "Processing..." : "Confirm Rejection")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string adminEmail = "abhikr6714@gmail.com";
+    private string adminPassword = "";
+    private string? loginError;
+    private bool isLoggingIn = false;
+    private bool isLoading = false;
+    private bool isProcessing = false;
+
+    private List<BookSubmission> submissions = new();
+    private string activeTab = "pending";
+
+    private BookSubmission? previewBook;
+    private BookSubmission? rejectBookTarget;
+    private string rejectionReasonText = "";
+
+    private List<BookSubmission> filteredSubmissions => activeTab switch
+    {
+        "pending" => submissions.Where(s => s.IsPending).ToList(),
+        "accepted" => submissions.Where(s => s.IsAccepted).ToList(),
+        "rejected" => submissions.Where(s => s.IsRejected).ToList(),
+        _ => submissions
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Supabase.EnsureInitializedAsync();
+        Supabase.AuthStateChanged += OnAuthStateChanged;
+        if (Supabase.IsOwner)
+        {
+            await RefreshSubmissions();
+        }
+    }
+
+    private void OnAuthStateChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            if (Supabase.IsOwner)
+            {
+                await RefreshSubmissions();
+            }
+            StateHasChanged();
+        });
+    }
+
+    private async Task HandleOwnerLogin()
+    {
+        isLoggingIn = true;
+        loginError = null;
+        try
+        {
+            var res = await Supabase.SignInAsync(adminEmail.Trim(), adminPassword);
+            if (!res.Success)
+            {
+                loginError = res.Error ?? "Login failed. Check your password.";
+            }
+            else if (!Supabase.IsOwner)
+            {
+                loginError = "You logged in with an account that is not abhikr6714@gmail.com.";
+            }
+            else
+            {
+                await RefreshSubmissions();
+            }
+        }
+        catch (Exception ex)
+        {
+            loginError = ex.Message;
+        }
+        finally
+        {
+            isLoggingIn = false;
+        }
+    }
+
+    private async Task RefreshSubmissions()
+    {
+        isLoading = true;
+        try
+        {
+            submissions = await Supabase.GetSubmissionsAsync("all");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private void OpenPreview(BookSubmission book)
+    {
+        previewBook = book;
+    }
+
+    private void ClosePreview()
+    {
+        previewBook = null;
+    }
+
+    private void OpenRejectModal(BookSubmission book)
+    {
+        rejectBookTarget = book;
+        rejectionReasonText = book.RejectionReason ?? "";
+    }
+
+    private void CloseRejectModal()
+    {
+        rejectBookTarget = null;
+        rejectionReasonText = "";
+    }
+
+    private void SetReasonPreset(string text)
+    {
+        rejectionReasonText = text;
+    }
+
+    private async Task AcceptBook(BookSubmission book)
+    {
+        isProcessing = true;
+        try
+        {
+            var res = await Supabase.UpdateSubmissionStatusAsync(book.Id, "accepted", null);
+            if (res.Success)
+            {
+                book.Status = "accepted";
+                book.RejectionReason = null;
+                book.ReviewedAt = DateTime.UtcNow;
+
+                // Dynamically refresh live library catalogue so the book appears immediately
+                await Books.RefreshCommunityBooksAsync();
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmReject()
+    {
+        if (rejectBookTarget == null) return;
+
+        isProcessing = true;
+        try
+        {
+            var res = await Supabase.UpdateSubmissionStatusAsync(
+                rejectBookTarget.Id,
+                "rejected",
+                string.IsNullOrWhiteSpace(rejectionReasonText) ? "Does not meet publishing guidelines." : rejectionReasonText
+            );
+
+            if (res.Success)
+            {
+                rejectBookTarget.Status = "rejected";
+                rejectBookTarget.RejectionReason = rejectionReasonText;
+                rejectBookTarget.ReviewedAt = DateTime.UtcNow;
+                CloseRejectModal();
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,203 @@
+using System.Text.Json;
+using Microsoft.JSInterop;
+using WikiLibrary.Models;
+
+namespace WikiLibrary.Services;
+
+public class SupabaseService
+{
+    private readonly IJSRuntime _js;
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    public SupabaseUser? CurrentUser { get; private set; }
+    public bool IsOwner => CurrentUser?.IsOwner == true;
+    public bool IsAuthenticated => CurrentUser != null;
+    public bool IsInitialized { get; private set; }
+
+    public event Action? AuthStateChanged;
+
+    public SupabaseService(IJSRuntime js)
+    {
+        _js = js;
+    }
+
+    public async Task EnsureInitializedAsync()
+    {
+        if (IsInitialized) return;
+        try
+        {
+            var userJson = await _js.InvokeAsync<string?>("supabaseAuthGetUser");
+            if (!string.IsNullOrWhiteSpace(userJson))
+            {
+                CurrentUser = JsonSerializer.Deserialize<SupabaseUser>(userJson, JsonOptions);
+            }
+            IsInitialized = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] Init error: {ex.Message}");
+            IsInitialized = true;
+        }
+    }
+
+    public async Task<SupabaseAuthResult> SignInAsync(string email, string password)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseAuthSignIn", email, password);
+            var result = JsonSerializer.Deserialize<SupabaseAuthResult>(raw, JsonOptions) ?? new SupabaseAuthResult { Success = false, Error = "Failed to parse auth response" };
+            if (result.Success && result.User != null)
+            {
+                CurrentUser = result.User;
+                AuthStateChanged?.Invoke();
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new SupabaseAuthResult { Success = false, Error = ex.Message };
+        }
+    }
+
+    public async Task<SupabaseAuthResult> SignUpAsync(string email, string password)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseAuthSignUp", email, password);
+            var result = JsonSerializer.Deserialize<SupabaseAuthResult>(raw, JsonOptions) ?? new SupabaseAuthResult { Success = false, Error = "Failed to parse sign up response" };
+            if (result.Success && result.User != null)
+            {
+                CurrentUser = result.User;
+                AuthStateChanged?.Invoke();
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new SupabaseAuthResult { Success = false, Error = ex.Message };
+        }
+    }
+
+    public async Task SignOutAsync()
+    {
+        try
+        {
+            await _js.InvokeVoidAsync("supabaseAuthSignOut");
+        }
+        catch { }
+        CurrentUser = null;
+        AuthStateChanged?.Invoke();
+    }
+
+    public async Task<FileUploadResult> UploadBookFileAsync(string inputElementId, string sanitizedFileName)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseUploadBookFile", inputElementId, sanitizedFileName);
+            var result = JsonSerializer.Deserialize<FileUploadResult>(raw, JsonOptions);
+            return result ?? new FileUploadResult { Success = false, Error = "Upload response parsing failed" };
+        }
+        catch (Exception ex)
+        {
+            return new FileUploadResult { Success = false, Error = ex.Message };
+        }
+    }
+
+    public async Task<SubmissionOperationResult> CreateSubmissionAsync(BookSubmission submission)
+    {
+        try
+        {
+            if (CurrentUser != null)
+            {
+                submission.SubmittedBy = CurrentUser.Id;
+                if (string.IsNullOrWhiteSpace(submission.SubmitterEmail))
+                {
+                    submission.SubmitterEmail = CurrentUser.Email;
+                }
+            }
+
+            var payload = new
+            {
+                title = submission.Title,
+                author = submission.Author,
+                description = submission.Description,
+                category = submission.Category,
+                year = submission.Year,
+                language = submission.Language,
+                pages = submission.Pages,
+                file_size = submission.FileSize,
+                file_path = submission.FilePath,
+                public_url = submission.PublicUrl,
+                status = "pending",
+                submitted_by = submission.SubmittedBy,
+                submitter_name = submission.SubmitterName,
+                submitter_email = submission.SubmitterEmail
+            };
+
+            var payloadJson = JsonSerializer.Serialize(payload);
+            var raw = await _js.InvokeAsync<string>("supabaseCreateSubmission", payloadJson);
+            var result = JsonSerializer.Deserialize<SubmissionOperationResult>(raw, JsonOptions);
+            return result ?? new SubmissionOperationResult { Success = false, Error = "Failed to parse submission response" };
+        }
+        catch (Exception ex)
+        {
+            return new SubmissionOperationResult { Success = false, Error = ex.Message };
+        }
+    }
+
+    public async Task<List<BookSubmission>> GetSubmissionsAsync(string statusFilter = "all")
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseGetSubmissions", statusFilter);
+            return JsonSerializer.Deserialize<List<BookSubmission>>(raw, JsonOptions) ?? new List<BookSubmission>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] GetSubmissions error: {ex.Message}");
+            return new List<BookSubmission>();
+        }
+    }
+
+    public async Task<List<BookSubmission>> GetUserSubmissionsAsync(string email)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseGetUserSubmissions", email);
+            return JsonSerializer.Deserialize<List<BookSubmission>>(raw, JsonOptions) ?? new List<BookSubmission>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] GetUserSubmissions error: {ex.Message}");
+            return new List<BookSubmission>();
+        }
+    }
+
+    public async Task<SubmissionOperationResult> UpdateSubmissionStatusAsync(long id, string status, string? rejectionReason = null)
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseUpdateSubmissionStatus", id, status, rejectionReason);
+            var result = JsonSerializer.Deserialize<SubmissionOperationResult>(raw, JsonOptions);
+            return result ?? new SubmissionOperationResult { Success = false, Error = "Failed to parse update response" };
+        }
+        catch (Exception ex)
+        {
+            return new SubmissionOperationResult { Success = false, Error = ex.Message };
+        }
+    }
+
+    public async Task<List<BookSubmission>> GetAcceptedBooksAsync()
+    {
+        try
+        {
+            var raw = await _js.InvokeAsync<string>("supabaseGetAcceptedBooks");
+            return JsonSerializer.Deserialize<List<BookSubmission>>(raw, JsonOptions) ?? new List<BookSubmission>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SupabaseService] GetAcceptedBooks error: {ex.Message}");
+            return new List<BookSubmission>();
+        }
+    }
+}
